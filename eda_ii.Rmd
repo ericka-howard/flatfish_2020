@@ -1,6 +1,8 @@
 ---
 title: "flatfish_2020"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 # Start EDA II
@@ -10,10 +12,10 @@ library(tidyverse)
 library(GGally)
 library(magrittr)
 library(usmap)
-catch <- read_csv("data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
-len <- read_csv("data2/Shelf_Flatfish_Haul_Catch_Length.csv", guess_max = 10000)
+catch <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
+len <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch_Length.csv", guess_max = 10000)
 # length_spec <- read_csv("data2/Shelf_Flatfish_Haul_Catch_Length_Specimen.csv", guess_max = 10000)
-bot <- read_csv("bottom_type.csv", guess_max = 10000)
+bot <- read_csv("data/bottom_type.csv", guess_max = 10000)
 ```
 
 ```{r filter correct years and region}
