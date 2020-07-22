@@ -1,0 +1,196 @@
+---
+title: "flatfish_2020"
+output: html_notebook
+---
+
+# Start EDA II
+
+```{r load libraries and data}
+library(tidyverse)
+library(GGally)
+library(magrittr)
+library(usmap)
+catch <- read_csv("data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
+len <- read_csv("data2/Shelf_Flatfish_Haul_Catch_Length.csv", guess_max = 10000)
+# length_spec <- read_csv("data2/Shelf_Flatfish_Haul_Catch_Length_Specimen.csv", guess_max = 10000)
+bot <- read_csv("bottom_type.csv", guess_max = 10000)
+```
+
+```{r filter correct years and region}
+catch <- catch %>%
+  filter(CRUISE>= 199999 & CRUISE<201900,
+         REGION=="BS", 
+         START_LATITUDE<65) %>%
+  mutate(YEAR=floor((CRUISE/100)))
+len <- len %>%
+  filter(CRUISE>= 199999 & CRUISE<201900,
+         REGION=="BS", 
+         START_LATITUDE<65) %>%
+  mutate(YEAR=floor((CRUISE/100)))
+# length_spec <- length_spec %>%
+#   filter(CRUISE>= 199999 & CRUISE<201900)
+```
+
+```{r var names}
+(x <- names(catch))
+(y <- names(len))
+# names(length_spec)
+both <- x[x %in% y] # in both, same as call: intersect(x, y)
+onlyx <- x[!x %in% y] # only in 'x', same as: setdiff(x, y)
+onlyy <- y[!y %in% x] # only in 'y', same as: setdiff(y, x)
+length(both)
+length(onlyx)
+length(onlyy)
+onlyy
+```
+
+```{r var summaries}
+summary(catch)
+summary(len$LENGTH)
+summary(len$FREQUENCY)
+summary(len$SEX)
+#summary(length_spec$HAULJOIN)
+```
+
+```{r look at haul numbers}
+length(unique(catch$HAULJOIN))
+length(unique(len$HAULJOIN))
+#length(unique(length_spec$HAULJOIN))
+length(unique(catch$HAUL))
+length(unique(len$HAUL))
+
+hist(catch$HAUL)
+hist(catch$HAULJOIN)
+
+hist(len$HAUL)
+hist(len$HAULJOIN)
+
+x <- catch$HAUL
+y <- len$HAUL
+# names(length_spec)
+both <- x[x %in% y] # in both, same as call: intersect(x, y)
+onlyx <- x[!x %in% y] # only in 'x', same as: setdiff(x, y)
+onlyy <- y[!y %in% x] # only in 'y', same as: setdiff(y, x)
+length(both)
+length(onlyx)
+length(onlyy)
+onlyx
+```
+
+```{r checking things out}
+# all.equal(len, length_spec) # I think these tables are the same. they are.
+hist(len$CATCH_NUMBER_FISH) #what is this variable?
+hist(catch$CRUISE)
+summary(catch$CRUISE) #get info to filter cruise for year
+```
+
+```{r is gear temp or surface temp more appropriate}
+ggplot(data=catch, aes(x = GEAR_TEMPERATURE, y=SURFACE_TEMPERATURE))+
+  geom_point(alpha=0.2) +
+  geom_smooth(se=FALSE)+
+  geom_abline(slope=1, intercept = 0, color="red")
+
+# ggplot(data=catch, aes(x=GEAR_TEMPERATURE))+geom_histogram()
+# ggplot(data=catch, aes(x=SURFACE_TEMPERATURE))+geom_histogram()
+ggpairs(catch[,22:23])
+```
+
+```{r how correlated are depth and bottom type w Catch df}
+catch_test <- catch
+catch_test$BOTTOM_TYPE %<>% factor #COOL makes it a factor
+summary(catch_test$BOTTOM_TYPE)
+ggpairs(catch, columns = c(19, 20, 22))
+```
+
+```{r how correlated depth/bottom type with bot df}
+names(bot)
+summary(bot)
+ggpairs(bot, columns=c(5,11, 17)) #moderate relationship b/wn depth and phi, strong both with substrata
+```
+
+```{r looking at warm vs  cold counts (start TEST dfs)}
+add_temp_cat <- function(df){
+  new_df <- df %>% mutate(warm_cold = ifelse(GEAR_TEMPERATURE>=2, "warm", "cold"))
+  return(new_df)
+}
+plot_temp <- function(df){
+  ggplot(df, aes(warm_cold))+
+    geom_bar()+
+    theme_minimal()
+}
+catch_test <- add_temp_cat(catch)
+len_test <- add_temp_cat(len)
+plot_temp(catch_test)
+plot_temp(len_test)
+ggplot()+
+  geom_bar(data=catch_test, aes(x=warm_cold), fill="blue", alpha=0.5, width=0.5)+
+  geom_bar(data=len_test, aes(x=warm_cold), color="black", alpha=0, width=0.5)+
+  theme_minimal()
+```
+
+```{r fig.height=16, fig.width=12}
+ggplot(len_test)+
+  geom_point(aes(x=START_LONGITUDE, y=START_LATITUDE, color=warm_cold), alpha=0.2)+
+  geom_bin2d(aes(x=START_LONGITUDE, y=START_LATITUDE, fill=warm_cold), alpha=0.2)+
+  scale_fill_manual(values = c("warm" = "#e8fa5bff", "cold"="#0c2a50ff"))+
+  scale_color_manual(values = c("warm" = "#e8fa5bff", "cold"="#0c2a50ff"))+
+  facet_wrap(~YEAR, ncol=3)+
+  theme_minimal()+
+  theme(legend.position="none")
+```
+
+```{r look at proportion of cold years}
+# changes <- len_test %>%
+#   group_by(START_LATITUDE, START_LONGITUDE) %>%
+# #  summarise(prop_cold = length(which(len_test$warm_cold=="cold"))/length(len_test$warm_cold[!is.na(len_test$warm_cold)]))
+#   
+# ggplot(changes, aes(x=START_LONGITUDE, y=START_LATITUDE, alpha=prop_cold))+
+#   geom_point()
+
+ggplot(len_test)+
+  geom_point(aes(x=START_LONGITUDE, y=START_LATITUDE, color=warm_cold), alpha=0.2)+
+  geom_bin2d(aes(x=START_LONGITUDE, y=START_LATITUDE, fill=warm_cold), alpha=0.5)+
+  scale_fill_manual(values = c("warm" = "#e8fa5bff", "cold"="#0c2a50ff"))+
+  scale_color_manual(values = c("warm" = "transparent", "cold"="#0c2a50ff"))+
+  theme_minimal()
+```
+
+```{r trying to figure out why 2012 has different values. irrelevant, filtered now}
+# m2012 <- len_test %>% filter(YEAR==2012)
+# ggplot(m2012, aes(x=START_LONGITUDE, y=START_LATITUDE))+geom_point()
+# confused_2012 <- m2012 %>% filter(START_LATITUDE>65)
+# summary(confused_2012)
+# ggplot(confused_2012, aes(x=START_LONGITUDE, y=START_LATITUDE))+geom_point()
+# n_points <- function(yr){
+#   print(paste(yr, length(which(len_test$YEAR==yr))))
+# }
+# for(i in (2000:2018)){
+#   n_points(i)
+# }
+# n_points(2002)
+```
+
+```{r}
+changes <- len_test
+changes$START_LATITUDE %<>% factor
+length(levels(changes$START_LATITUDE))
+catch_changes <- catch
+catch_changes$START_LATITUDE %<>% factor
+length(levels(catch_changes$START_LATITUDE)) #376 stations
+```
+
+________________________________________________________________________________
+
+# Post 07/21/2020 Meeting
+
+```{r}
+library(PBSmapping)
+```
+
+
+
+
+
+
+
+
