@@ -1,0 +1,91 @@
+---
+title: "initialEDA"
+author: "Ericka Smith"
+date: "7/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r get data}
+library(tidyverse)
+library(maps)
+dat <- read_csv("race_specimen1/race_spec1_no_head.csv", guess_max = 10000)
+summary(dat$`Age (years)`)
+# unique(dat$`Age (years)`)
+```
+
+
+
+```{r fix names}
+unique(dat$Common_Name)
+colnames(dat)
+colnames(dat) <- gsub(" ", "_", colnames(dat))
+dat$Common_Name <- gsub("northern rock sole", "nrs", dat$Common_Name)
+dat$Common_Name <- gsub("yellowfin sole", "yfs", dat$Common_Name)
+dat$Common_Name <- gsub("Alaska plaice", "akp", dat$Common_Name)
+colnames(dat)[8] <- "start_lat"
+colnames(dat)[9] <- "start_lon"
+colnames(dat)[10] <- "end_lat"
+colnames(dat)[11] <- "end_lon"
+colnames(dat)[34] <- "age"
+```
+
+```{r lat/lons}
+world_map <- map_data("world")
+# ggplot()+
+ # geom_polygon(world_map, aes(x = long, y = lat, group = group))+
+  # geom_point(data=dat, aes(x=start_lon, y=start_lat))#+
+  # coord_cartesian(xlim=c(-200, -150))
+  # coord_cartesian(xlim=c(-182, -165), ylim = c(50, 55))
+  # coord_cartesian(xlim=c(170, 182), ylim = c(50, 54))
+
+# unnecessary bc EBS doesn't cross 180 degree line
+# dat_lons_same <- dat %>%
+#   mutate(start_lon2 = ifelse(start_lon>0, start_lon-360, start_lon),
+#          end_lon2 = ifelse(end_lon>0, end_lon-360, end_lon))
+# # summary(dat_lons_same)
+
+unique(dat$Survey)
+ebs <- dat %>%
+  filter(Survey == "EBS_SHELF")
+ggplot(data=ebs)+
+  geom_point(aes(x=start_lon, y=start_lat), alpha=0.1)+
+  geom_point(aes(end_lon, y=end_lat), color="blue", alpha=0.1)
+
+ggplot(data=ebs)+
+  geom_density(aes(x=start_lon))+
+  geom_density(aes(end_lon), color="blue")
+# unique(ebs$start_lon[which(ebs$start_lon !=ebs$end_lon)])
+```
+
+```{r ages}
+names(ebs)
+ebs_right_yrs <- ebs %>%
+  filter(Year>=2000 & Year<2019)
+ggplot()+
+  geom_density(aes(x=age))+
+  facet_wrap(~Common_Name)
+
+summary(ebs_right_yrs)
+unique(ebs_right_yrs$`Length_(mm)`)
+names(ebs_right_yrs)
+
+ebs_right_yrs %>%
+  #filter(Year == 2002) %>%
+  ggplot()+
+  #geom_point(aes(x = start_lon, y = end_lon, color="red"), alpha = 0.2)+
+  geom_point(aes(x = start_lat, y=end_lat), alpha = 0.5, color = "red")+
+  #facet_wrap(~Year)
+  geom_abline(intercept = 0, slope = 1)
+
+typeof(ebs_right_yrs$Year)
+summary(ebs_right_yrs$Haul_Join_ID)
+```
+
+
+
+
+
