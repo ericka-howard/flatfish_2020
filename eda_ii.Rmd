@@ -130,7 +130,11 @@ ggplot()+
   theme_minimal()
 ```
 
+
+
 ```{r fig.height=16, fig.width=12}
+
+
 ggplot(len_test)+
   geom_point(aes(x=START_LONGITUDE, y=START_LATITUDE, color=warm_cold), alpha=0.2)+
   geom_bin2d(aes(x=START_LONGITUDE, y=START_LATITUDE, fill=warm_cold), alpha=0.2)+
@@ -179,14 +183,6 @@ length(levels(changes$START_LATITUDE))
 catch_changes <- catch
 catch_changes$START_LATITUDE %<>% factor
 length(levels(catch_changes$START_LATITUDE)) #376 stations
-```
-
-________________________________________________________________________________
-
-# Post 07/21/2020 Meeting
-
-```{r}
-library(PBSmapping)
 ```
 
 
