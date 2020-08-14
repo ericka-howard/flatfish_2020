@@ -406,7 +406,7 @@ makin_plots_dos <- function() {
 makin_plots_dos()
 ```
 
-```{r, fig.height=14, fig.width=10}
+```{r, fig.height=12, fig.width=8}
 # data -------------------------------------------------------------------------
 setup_catch <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
 setup_catch <- setup_catch %>%
@@ -427,7 +427,7 @@ makin_plots_tres <- function() {
   xl <- c(-179, -157.9); 
   yl <- c(54.1, 65.1)
   # create grid
-  grid_pbs   <- makeGrid(x=seq(-179, -157.9,1), y=seq(54.1, 65.1,1),                     
+  grid_pbs   <- makeGrid(x=seq(-179, -157.9), y=seq(54.1, 65.1,1),                     
                      projection="LL", zone=3)    # UTM Zones, Bering Sea is 1-4
   # find Event Data (hauls) in grid and calculate means
   locData<- findCells(events, grid_pbs) 
@@ -491,7 +491,7 @@ makin_plots_tres <- function() {
        cex=1);  
 }
 # call -------------------------------------------------------------------------
-makin_plots_dos()
+makin_plots_tres()
 ```
 
 

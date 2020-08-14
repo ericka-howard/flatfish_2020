@@ -25,8 +25,7 @@ colnames(dat)
 colnames(dat) <- gsub(" ", "_", colnames(dat))
 dat$Common_Name <- gsub("northern rock sole", "nrs", dat$Common_Name)
 dat$Common_Name <- gsub("yellowfin sole", "yfs", dat$Common_Name)
-dat$Common_Name <- gsub("Alaska plaice", "akp", dat$Common_Name)
-colnames(dat)[8] <- "start_lat"
+dat$Common_Name <- gsub("Alaska plaice", "akp", dat$Common_Name)colnames(dat)[8] <- "start_lat"
 colnames(dat)[9] <- "start_lon"
 colnames(dat)[10] <- "end_lat"
 colnames(dat)[11] <- "end_lon"
