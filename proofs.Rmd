@@ -325,8 +325,11 @@ ggplot(plot_dat4) +
 
 
 ```{r just-trying-lat-lon-switched, fig.height=20, fig.width=14}
-summary(plot_dat4$STATION_AVG_DEPTH)
-depth_bin_cuts <- c(69.57, 92.85, 119.22)
+ggplot(akp) + 
+  geom_point(aes(x=yr_avg_temp, y=med), alpha=0.1) +
+  facet_grid(year~depth_bins, scales="free_x")+
+  geom_vline(aes(xintercept=yr_avg_temp), color="red")
+
 ```
 
 

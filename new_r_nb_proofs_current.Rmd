@@ -1,10 +1,18 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r libraries}
 # load libraries
 library(tidyverse)
 library(sf)
 library(magrittr)
 
 # NOTE: [[[10130=fhs 10210=yfs 10261=nrs(not sp. or juvenile) 10285=akp]]]
+```
 
+```{r load data and lowercase}
 # so important
 make_lowercase <- function(df){
   for (i in 1:length(names(df))){
@@ -28,8 +36,9 @@ len <- make_lowercase(len)
 # bot <- make_lowercase(bot)
 spec <- make_lowercase(spec)
 station_info <- make_lowercase(station_info)
+```
 
-
+```{r filters}
 # filter catch
 catch <- catch %>%
   filter(cruise>= 199999 & cruise<201900,
@@ -54,83 +63,27 @@ len_e <- len %>%
   mutate(ss_prop=(frequency/n_subsamp),
          n_haul = (ss_prop*catch_number_fish))
 remove(len)
+```
 
+
+```{r sst-plot, fig.height=20, fig.width=14}
 #big blue plots (just to look at sst)
 ggplot(catch)+
   geom_point(aes(x=start_longitude, y=start_latitude, color=surface_temperature))+
   facet_wrap(~year)+
   theme_minimal()
 
-############################################################################ below portion shouldn't need to be ran again
-############################################################################ makes station_info.rds
-# 
-# # determine avg lats and lons for each row in catch
-# catch <- catch %>%
-#   mutate(avg_lon = (start_longitude+end_longitude)/2,
-#          avg_lat = (start_latitude+end_latitude)/2)
-# 
-# # determine average lat and lon for each stationid throughout
-# # time by using the catch data averages and, again, averaging
-# st_avg_lat <- tapply(catch$avg_lat,catch$stationid,mean)
-# st_avg_lon <- tapply(catch$avg_lon,catch$stationid,mean)
-# index <- match(catch$stationid,names(st_avg_lon))
-# catch$st_avg_lon <- st_avg_lon[index]
-# catch$st_avg_lat <- st_avg_lat[index]
-# 
-# # add those values into the other dfs
-# index <- match(len_e$stationid,names(st_avg_lon))
-# len_e$st_avg_lon <- st_avg_lon[index]
-# len_e$st_avg_lat <- st_avg_lat[index]
-# 
-# index <- match(spec$stationid,names(st_avg_lon))
-# spec$st_avg_lon <- st_avg_lon[index]
-# spec$st_avg_lat <- st_avg_lat[index]
-# remove(st_avg_lat)
-# remove(st_avg_lon)
-# 
-# # try an index of depths bc they shouldn't change
-# catch <- catch %>%
-#   group_by(stationid) %>%
-#   mutate(avg_depth = mean(bottom_depth))
-# 
-# # add average depth by stationid to catch
-# st_avg_depth <- tapply(catch$avg_depth , catch$stationid,mean)
-# index <- match(catch$stationid , names(st_avg_depth))
-# catch$st_avg_depth <- st_avg_depth[index]
-# remove(st_avg_depth)
-# 
-# # shrink down to only have information about stations
-# names(catch)
-# nums <- c(18,33,34,36)
-# station_deets <- catch[,nums]
-# remove(nums)
-# station_info <- distinct(station_deets)
-# remove(station_deets)
-# remove(index)
-# 
-# # qc
-# length(unique(catch$stationid))
-# station_info <- na.omit(station_info)
-# ggplot(station_info)+
-#   geom_histogram(binwidth=.5,aes(x=st_avg_depth))+ 
-#   theme_light()
-# 
-# # save this df since it should ~remain constant
-# # saveRDS(station_info, file = "data/station_info.rds")
-
-####################################################################### above portion shouldn't need to be ran again
-####################################################################### creates station info rds 
-
 # get station info
-# readRDS(station_info, file = "data/station_info.rds")
+readRDS(station_info, file = "data/station_info.rds")
 
 # check things out
 ggplot(station_info)+
   geom_point(aes(x = st_avg_lon, y=st_avg_lat, color=st_avg_depth))+
   theme_light()
+```
 
-###################################################################################
 
+```{r medians}
 # gets the median while accounting for the number of times that a length is repeated per haul
 get_median <- function(l, n){
   new_list <- rep(l, round(n))
@@ -153,7 +106,11 @@ fhs <- get_yrly_st_medians(10130)
 yfs <- get_yrly_st_medians(10210)
 nrs <- get_yrly_st_medians(10261)
 akp <- get_yrly_st_medians(10285)
+```
 
+
+
+```{r depth-bins}
 make_depth_bins <- function(df){
   sumry <- summary(df$st_avg_depth)
   cuts <- c(sumry[1], sumry[2], sumry[3], sumry[5], sumry[6])
@@ -162,17 +119,21 @@ make_depth_bins <- function(df){
 }
 
 # do for all
-fhs <- make_depth_bins(fhs)
-yfs <- make_depth_bins(yfs)
-nrs <- make_depth_bins(nrs)
-akp <- make_depth_bins(akp) 
+fhs1 <- make_depth_bins(fhs)
+yfs1 <- make_depth_bins(yfs)
+nrs1 <- make_depth_bins(nrs)
+akp1 <- make_depth_bins(akp) 
 
 # plot now with facet_grid and depth bins, mostly useless bc just lat/lon (/sanity check)
 # ggplot(fhs) + 
 #   geom_point(aes(x=st_avg_lon, y=st_avg_lat, color=med)) +
 #   facet_grid(year~depth_bins)+
 #   theme_light()
+```
 
+
+
+```{r, density-plots, fig.height=20, fig.width=14}
 # plot  with density functions for the medians. pretty boring
 large_density_plot <- function(df, df_name){
   ggplot(df)+
@@ -182,10 +143,34 @@ large_density_plot <- function(df, df_name){
     ggtitle(df_name)
 }
 
-large_density_plot(fhs, "fhs")
+large_density_plot(fhs1, "fhs")
+large_density_plot(yfs1, "yfs")
+large_density_plot(nrs1, "nrs")
+large_density_plot(akp1, "akp")
+```
 
-###############################################################################
 
+
+```{r}
+get_station_avg_temp <- function(df_orig,spec_code){
+  df_stat_means <- len_e %>%
+    filter(species_code==spec_code) %>%
+    group_by(stationid, year) %>%
+    summarise(avg_stat_temp = mean(gear_temperature, na.rm = TRUE))
+  df_after <- inner_join(df_orig, df_stat_means, by="stationid")
+  df_after <- df_after[,-9]
+  names(df_after)[2] <- "year"
+  return(df_after)
+}
+fhs2 <- get_station_avg_temp(fhs1,10130)
+yfs2 <- get_station_avg_temp(yfs1, 10210)
+nrs2 <- get_station_avg_temp(nrs1, 10261)
+akp2 <- get_station_avg_temp(akp1, 10285)
+```
+
+
+
+```{r, get-yr-ref-temps, fig.height=20, fig.width=14}
 # make list of the average gear temperature for each year
 yearly_avg_temps <- catch %>% 
   group_by(year) %>% 
@@ -195,27 +180,72 @@ yearly_avg_temps <- catch %>%
 get_ref_temp <- function(df){
   return(left_join(df, yearly_avg_temps, by="year"))
 }
-akp <- get_ref_temp(akp)
-yfs <- get_ref_temp(yfs)
-nrs <- get_ref_temp(nrs)
-fhs <- get_ref_temp(fhs)
+akp3 <- get_ref_temp(akp2)
+yfs3 <- get_ref_temp(yfs2)
+nrs3 <- get_ref_temp(nrs2)
+fhs3 <- get_ref_temp(fhs2)
 
 # so this all isn't great because I've consolidated to the point of
 # having lost individual haul temperature data... 
 # instead I have the average station temperature data per year
 # and then I'm comparing it to the survey average each year
 # which is fine but not super useful? 
+```
 
-ggplot(akp) + 
-  geom_point(aes(x=yr_avg_temp, y=med), alpha=0.1) +
-  facet_grid(year~depth_bins, scales="free_x")+
-  geom_vline(aes(xintercept=yr_avg_temp), color="red")
 
-# mean temp makes things look very boring
 
-# try using lat/lon in grid instead? 
-ggplot(plot_dat2) + 
-  geom_point(aes(x=year, y=st_avg_depth, color=med)) +
-  facet_grid(st_avg_lat~st_avg_lon, scales="free")
+```{r, bad-plots-ref-yr-avgs, fig.height=20, fig.width=14}
+plot_stat_temps_and_yr_avgs <- function(df, df_name){
+  ggplot(df) + 
+    geom_point(aes(x=avg_stat_temp, y=med), alpha=0.1) +
+    facet_grid(year~depth_bins, scales="free_x")+
+    geom_vline(aes(xintercept=yr_avg_temp), color="red")+
+    theme_light()+
+    ggtitle(df_name)
+}
 
-# NO. NEED TO TRY "residual" idea
+plot_stat_temps_and_yr_avgs(akp3, "akp")
+plot_stat_temps_and_yr_avgs(yfs3, "yfs")
+plot_stat_temps_and_yr_avgs(nrs3, "nrs")
+plot_stat_temps_and_yr_avgs(fhs3, "fhs")
+```
+
+
+
+```{r, try-box-plots, fig.height=20, fig.width=14}
+plot_box <- function(df, df_name){
+  ggplot(df) + 
+    geom_smooth(aes(x=avg_stat_temp, y=med), alpha=0.1) +
+    facet_grid(year~depth_bins, scales="free_x")+
+    geom_vline(aes(xintercept=yr_avg_temp), color="red")+
+    theme_light()+
+    ggtitle(df_name)
+}
+
+plot_box(akp3, "akp")
+plot_box(yfs3, "yfs")
+plot_box(nrs3, "nrs")
+plot_box(fhs3, "fhs")
+```
+
+
+```{r, try-contours, fig.height=40, fig.width=14}
+plot_density <- function(df, df_name){
+  ggplot(df) + 
+    geom_density2d(aes(x=avg_stat_temp, y=med)) +
+    facet_grid(year~depth_bins, scales="free_x")+
+    geom_vline(aes(xintercept=yr_avg_temp), color="red")+
+    theme_light()+
+    ggtitle(df_name)
+}
+
+plot_density(akp3, "akp")
+plot_density(yfs3, "yfs")
+plot_density(nrs3, "nrs")
+plot_density(fhs3, "fhs")
+```
+
+
+
+
+
