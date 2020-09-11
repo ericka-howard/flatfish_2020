@@ -245,7 +245,18 @@ plot_density(nrs3, "nrs")
 plot_density(fhs3, "fhs")
 ```
 
+```{r curiosity-about-n-samples-per-yer-per-station}
+# ns <- catch %>%
+#   count(year, stationid)
 
+summary(ns$n)
+ggplot(ns)+
+  geom_boxplot(aes(x=n))
+
+ggplot(ns)+
+  geom_histogram(aes(x=n), binwidth)+
+  coord_cartesian(xlim=c(0, 20))
+```
 
 
 
