@@ -8,6 +8,7 @@ output: html_notebook
 library(tidyverse)
 library(sf)
 library(magrittr)
+library(viridis)
 # NOTE: [[[10130=fhs 10210=yfs 10261=nrs(not sp. or juvenile) 10285=akp]]]
 ```
 
@@ -80,33 +81,31 @@ plot_contours <- function(df, df_name, y, y_name){
     summarise(num =sum(n_haul)) %>%
     uncount(num) %>%
     ggplot()+
-    geom_density2d(aes(x=length, y=!!yvar))+
+    geom_bin2d(aes(x=length, y=!!yvar))+
     theme_light()+
-    ggtitle(paste(df_name, y_name))
+    ggtitle(paste(df_name, y_name))+
+    scale_fill_viridis()
   return(p)
 }
 p_akp_temp <- plot_contours(akp, "akp", gear_temperature, "gear_temperature")
 p_akp_depth <- plot_contours(akp, "akp", bottom_depth, "bottom_depth")
 p_fhs_temp <- plot_contours(fhs, "fhs", gear_temperature, "gear_temperature")
 p_fhs_depth <- plot_contours(fhs, "fhs", bottom_depth, "bottom_depth")
-p_nrs_temp <- plot_contours(fhs, "nrs", gear_temperature, "gear_temperature")
-p_nrs_depth <- plot_contours(fhs, "nrs", bottom_depth, "bottom_depth")
-p_yfs_temp <- plot_contours(fhs, "yfs", gear_temperature, "gear_temperature")
-p_yfs_depth <- plot_contours(fhs, "yfs", bottom_depth, "bottom_depth")
+p_nrs_temp <- plot_contours(nrs, "nrs", gear_temperature, "gear_temperature")
+p_nrs_depth <- plot_contours(nrs, "nrs", bottom_depth, "bottom_depth")
+p_yfs_temp <- plot_contours(yfs, "yfs", gear_temperature, "gear_temperature")
+p_yfs_depth <- plot_contours(yfs, "yfs", bottom_depth, "bottom_depth")
 ```
 
-```{r}
-new_df <- orig_df %>%
-  group_by(length, gear_temperature) %>%
-  summarise(num =sum(n_haul)) %>%
-  uncount(num)
-
-ggplot(new_df)+
-  geom_density2d(aes(x=length, y=gear_temperature)) +
-    #facet_grid(year~depth_bins, scales="free_x")+
-    #geom_vline(aes(xintercept=yr_avg_temp), color="red")+
-  theme_light()#+
-    # ggtitle(df_name)
+```{r print-out-plots, fig.height=12, fig.width=12}
+p_akp_temp
+p_akp_depth
+p_fhs_temp 
+p_fhs_depth
+p_nrs_temp
+p_nrs_depth
+p_yfs_temp
+p_yfs_depth
 ```
 
 
