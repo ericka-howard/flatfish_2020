@@ -1,6 +1,8 @@
 ---
 title: "Research_Qs_Approaches_Hypotheses_plots"
 output: html_notebook
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -9,10 +11,11 @@ library(tidyverse)
 library(sf)
 library(magrittr)
 library(viridis)
+library(grDevices)
 # NOTE: [[[10130=fhs 10210=yfs 10261=nrs(not sp. or juvenile) 10285=akp]]]
 ```
 
-
+# Data MGMT
 
 ```{r load-data-and-lowercase, warning=FALSE, error=FALSE, message=FALSE}
 make_lowercase <- function(df){
@@ -22,32 +25,12 @@ make_lowercase <- function(df){
   return(df)
 }
 # load data
-# catch <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
 len <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch_length.csv", guess_max = 10000)
-# spec <- read_csv("data/Shelf_Flatfish_Haul_Specimen.csv", guess_max = 10000)
-# station_info <- readRDS("data/station_info.rds")
 # make all lowercase
-# catch <- make_lowercase(catch)
 len <- make_lowercase(len)
-# spec <- make_lowercase(spec)
-# station_info <- make_lowercase(station_info)
 ```
 
-
-
 ```{r filter-and-extend-lengths, warning=FALSE, error=FALSE, message=FALSE}
-# filter catch
-# catch <- catch %>%
-#   filter(cruise>= 199999 & cruise<201900,
-#          region=="BS") %>%
-#   mutate(year=floor((cruise/100)))
-# filter specimen
-# hauljoin_list <- unique(catch$hauljoin)
-# spec <- spec %>%
-#   filter(hauljoin %in% (hauljoin_list)) %>%
-#   mutate(year=as.integer(substr(start_time,8,9)))
-# remove(hauljoin_list)                                   
-# filter and extend lengths
 len_e <- len %>%
   filter(cruise>= 199999 & cruise<201900,
          region=="BS")%>%
@@ -60,8 +43,6 @@ len_e <- len %>%
 remove(len)
 ```
 
-
-
 ```{r split-up-species, warning=FALSE, error=FALSE, message=FALSE}
 # takes interpolated haul lengths and split off a species
 separate_spec <- function(spec_code){
@@ -70,75 +51,157 @@ separate_spec <- function(spec_code){
   return(dat)
 }
 # divide out species
-# akp <- separate_spec(10285)
-# fhs <- separate_spec(10130)
-# nrs <- separate_spec(10261)
+akp <- separate_spec(10285)
+fhs <- separate_spec(10130)
+nrs <- separate_spec(10261)
 yfs <- separate_spec(10210)
 remove(len_e)
 ```
 
+# Contour Plots
+
+```{r data-mgmt-for-contour-plots, warning=FALSE, error=FALSE, message=FALSE}
+# make_cuts <- function(df, df_name, y, y_name){
+#   yvar <- enquo(y)
+#   df_cut <- df[, c(y_name, "length", "n_haul")]
+#   df_cut$n_haul %<>% round()
+#   df <- df %>%
+#     group_by(length, !!yvar) %>%
+#     summarise(num =sum(n_haul)) %>%
+#     uncount(num)
+#   return(df)
+# }
+# p_akp_temp <- make_cuts(akp, "akp", gear_temperature, "gear_temperature")
+# p_akp_depth <- make_cuts(akp, "akp", bottom_depth, "bottom_depth")
+# p_fhs_temp <- make_cuts(fhs, "fhs", gear_temperature, "gear_temperature")
+# p_fhs_depth <- make_cuts(fhs, "fhs", bottom_depth, "bottom_depth")
+# proceed with caution, computationally intensive
+# p_nrs_temp <- make_cuts(nrs, "nrs", gear_temperature, "gear_temperature")
+# p_nrs_depth <- make_cuts(nrs, "nrs", bottom_depth, "bottom_depth")
+# yfs_temp <- make_cuts(yfs, "yfs", gear_temperature, "gear_temperature")
+# yfs_depth <- make_cuts(yfs, "yfs", bottom_depth, "bottom_depth")
+```
 
 
-```{r create-contour-plots}
-make_cuts <- function(df, df_name, y, y_name){
-  yvar <- enquo(y)
-  df_cut <- df[, c(y_name, "length", "n_haul")]
-  df_cut$n_haul %<>% round()
-  df <- df %>%
-    group_by(length, !!yvar) %>%
-    summarise(num =sum(n_haul)) %>%
-    uncount(num)
+
+```{r print-out-contour-plots, warning=FALSE, error=FALSE, message=FALSE, fig.height=8, fig.width=10}
+# make_contour_plot <- function(df, df_name, y, y_name){
+#   yvar <- enquo(y)
+#   ggplot(df)+
+#     geom_density2d(aes(x=length, y=!!yvar))+
+#     theme_light()+
+#     ggtitle(paste(df_name, y_name))+
+#     scale_fill_viridis()
+# }
+# make_contour_plot(p_akp_temp, "akp", gear_temperature, "gear_temperature")
+# make_contour_plot(p_akp_depth, "akp", bottom_depth, "bottom_depth")
+# make_contour_plot(p_fhs_temp, "fhs", gear_temperature, "gear_temperature")
+# make_contour_plot(p_fhs_depth, "fhs", bottom_depth, "bottom_depth")
+# proceed with caution, computationally intensive
+# make_contour_plot(p_nrs_temp, "nrs", gear_temperature, "gear_temperature")
+# make_contour_plot(p_nrs_depth, "nrs", bottom_depth, "bottom_depth")
+# make_contour_plot(yfs_temp, "yfs", gear_temperature, "gear_temperature")
+# make_contour_plot(yfs_depth, "yfs", bottom_depth, "bottom_depth")
+```
+
+# Now boxplots
+
+```{r, make-depth-bins}
+make_depth_bins <- function(df){
+  df$depth_bins <- cut(df$bottom_depth, breaks = 8)
   return(df)
 }
 
-make_contour_plot <- function(df, df_name, y, y_name){
-  yvar <- enquo(y)
-  p <- ggplot()+
-    geom_density2d(aes(x=length, y=!!yvar))+
-    theme_light()+
-    ggtitle(paste(df_name, y_name))+
-    scale_fill_viridis()
-  return(p)
+# do for all
+fhs_bin1 <- make_depth_bins(fhs)
+yfs_bin1 <- make_depth_bins(yfs)
+nrs_bin1 <- make_depth_bins(nrs)
+akp_bin1 <- make_depth_bins(akp) 
+```
+
+
+```{r, make-temp-bins}
+make_temp_bins <- function(df){
+  df$temp_bins <- cut(df$gear_temperature, breaks=8)
+  return(df)
 }
-# p_akp_temp <- plot_contours(akp, "akp", gear_temperature, "gear_temperature")
-# p_akp_depth <- plot_contours(akp, "akp", bottom_depth, "bottom_depth")
-# p_fhs_temp <- plot_contours(fhs, "fhs", gear_temperature, "gear_temperature")
-# p_fhs_depth <- plot_contours(fhs, "fhs", bottom_depth, "bottom_depth")
-# p_nrs_temp <- plot_contours(nrs, "nrs", gear_temperature, "gear_temperature")
-# p_nrs_depth <- plot_contours(nrs, "nrs", bottom_depth, "bottom_depth")
-yfs_temp <- make_cuts(yfs, "yfs", gear_temperature, "gear_temperature")
-yfs_depth <- make_cuts(yfs, "yfs", bottom_depth, "bottom_depth")
-remove(yfs)
-p_yfs_temp <- make_contour_plot(yfs_temp, "yfs", gear_temperature, "gear_temperature")
-p_yfs_depth <- make_contour_plot(yfs_depth, "yfs", bottom_depth, "bottom_depth")
 
+# do for all
+fhs_binned <- make_temp_bins(fhs_bin1)
+yfs_binned <- make_temp_bins(yfs_bin1)
+nrs_binned <- make_temp_bins(nrs_bin1)
+akp_binned <- make_temp_bins(akp_bin1) 
 ```
 
-
-
-```{r print-out-bin-plots, fig.height=8, fig.width=10}
-# p_akp_temp
-# p_akp_depth
-# p_fhs_temp 
-# p_fhs_depth
-# p_nrs_temp
-# p_nrs_depth
-# p_yfs_temp
-# p_yfs_depth
-```
-
-```{r}
-p_yfs_temp
-p_yfs_depth
-
-p_yfs_temp <- make_contour_plot(yfs_temp, "yfs", gear_temperature, "gear_temperature")
-
-ggplot(yfs_temp)  +  
-    stat_density2d(aes(x=length, y=gear_temperature))+
+```{r, depth-boxplots}
+plot_box_depth <- function(df, df_name){
+  ggplot(df) + 
+    geom_boxplot(aes(x=length, y=depth_bins)) +
     theme_light()+
-    ggtitle(paste("yfs", "gear_temperature"))+
-    scale_fill_viridis()
+    ggtitle(paste(df_name, "depth", "by", "percentiles", sep = "_"))
+}
+
+plot_box_depth(akp_binned, "akp")
+plot_box_depth(yfs_binned, "yfs")
+plot_box_depth(nrs_binned, "nrs")
+plot_box_depth(fhs_binned, "fhs")
 ```
 
 
+```{r, temp-boxplots}
+plot_box_temp <- function(df, df_name){
+  ggplot(df) + 
+    geom_boxplot(aes(x=length, y=temp_bins)) +
+    theme_light()+
+    ggtitle(paste(df_name, "temp", "by", "percentiles", sep = "_"))
+}
 
+plot_box_temp(akp_binned, "akp")
+plot_box_temp(yfs_binned, "yfs")
+plot_box_temp(nrs_binned, "nrs")
+plot_box_temp(fhs_binned, "fhs")
+```
+
+# now the same boxplots but with length binned
+
+```{r, make-length-bins}
+make_length_bins <- function(df){
+  df$length_bins <- cut(df$length, breaks=8)
+  return(df)
+}
+
+# do for all
+fhs_lbinned <- make_length_bins(fhs_binned)
+yfs_lbinned <- make_length_bins(yfs_binned)
+nrs_lbinned <- make_length_bins(nrs_binned)
+akp_lbinned <- make_length_bins(akp_binned) 
+```
+
+```{r, length-binned-depth-boxplots}
+plot_box_ldepth <- function(df, df_name){
+  ggplot(df) + 
+    geom_boxplot(aes(x=length_bins, y=bottom_depth)) +
+    theme_light()+
+    ggtitle(paste(df_name, "length", "by", "depth", "at", "percentiles", sep = "_"))
+}
+
+plot_box_ldepth(akp_lbinned, "akp")
+plot_box_ldepth(yfs_lbinned, "yfs")
+plot_box_ldepth(nrs_lbinned, "nrs")
+plot_box_ldepth(fhs_lbinned, "fhs")
+```
+
+
+```{r, length-binned-temp-boxplots}
+plot_box_ltemp <- function(df, df_name){
+  ggplot(df) + 
+    geom_boxplot(aes(x=length_bins, y=gear_temperature)) +
+    theme_light()+
+    ggtitle(paste(df_name, "length", "by", "temp", "at", "percentiles", sep = "_"))
+}
+
+plot_box_ltemp(akp_lbinned, "akp")
+plot_box_ltemp(yfs_lbinned, "yfs")
+plot_box_ltemp(nrs_lbinned, "nrs")
+plot_box_ltemp(fhs_lbinned, "fhs")
+```
