@@ -136,7 +136,7 @@ akp_binned <- make_temp_bins(akp_bin1)
 ```{r, depth-boxplots}
 plot_box_depth <- function(df, df_name){
   ggplot(df) + 
-    geom_boxplot(aes(x=length, y=depth_bins)) +
+    geom_boxplot(aes(x=depth_bins, y=length)) +
     theme_light()+
     ggtitle(paste(df_name, "depth", "by", "percentiles", sep = "_"))
 }
@@ -151,7 +151,7 @@ plot_box_depth(fhs_binned, "fhs")
 ```{r, temp-boxplots}
 plot_box_temp <- function(df, df_name){
   ggplot(df) + 
-    geom_boxplot(aes(x=length, y=temp_bins)) +
+    geom_boxplot(aes(x=temp_bins, y=length)) +
     theme_light()+
     ggtitle(paste(df_name, "temp", "by", "percentiles", sep = "_"))
 }
@@ -180,7 +180,9 @@ akp_lbinned <- make_length_bins(akp_binned)
 ```{r, length-binned-depth-boxplots}
 plot_box_ldepth <- function(df, df_name){
   ggplot(df) + 
-    geom_boxplot(aes(x=length_bins, y=bottom_depth)) +
+    geom_boxplot(aes(x=length_bins, y=bottom_depth),
+                 outlier.shape = NA) +
+    coord_cartesian(ylim=c(0, 225))+
     theme_light()+
     ggtitle(paste(df_name, "length", "by", "depth", "at", "percentiles", sep = "_"))
 }
@@ -195,7 +197,9 @@ plot_box_ldepth(fhs_lbinned, "fhs")
 ```{r, length-binned-temp-boxplots}
 plot_box_ltemp <- function(df, df_name){
   ggplot(df) + 
-    geom_boxplot(aes(x=length_bins, y=gear_temperature)) +
+    geom_boxplot(aes(x=length_bins, y=gear_temperature),
+                 outlier.shape = NA) +
+    coord_cartesian(ylim=c(-2.5, 12.5))+
     theme_light()+
     ggtitle(paste(df_name, "length", "by", "temp", "at", "percentiles", sep = "_"))
 }
