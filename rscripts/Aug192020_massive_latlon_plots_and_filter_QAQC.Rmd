@@ -1,0 +1,335 @@
+---
+title: "proofs"
+output: html_notebook
+---
+
+```{r, include=FALSE}
+library(tidyverse)
+library(sf)
+library(magrittr)
+#[[[10130=FHS 10210=YFS 10261=NRS(not sp. or juvenile) 10285=AKP]]]
+```
+
+```{r import-data, warnings=FALSE, results="hide", message=FALSE}
+catch <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
+len <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch_Length.csv", guess_max = 10000)
+# # length_spec <- read_csv("data2/Shelf_Flatfish_Haul_Catch_Length_Specimen.csv", guess_max = 10000)
+# bot <- read_csv("data/bottom_type.csv", guess_max = 10000)
+#newdata <- read_csv("data/Shelf_Flatfish_Haul_Specimen.csv", guess_max = 10000)
+spec <- read_csv("data/Shelf_Flatfish_Haul_Specimen.csv", guess_max = 10000)
+station_info <- readRDS("data/station_info.rds")
+```
+
+```{r filters}
+catch <- catch %>%
+  filter(CRUISE>= 199999 & CRUISE<201900,
+         REGION=="BS") %>%#, 
+         #START_LATITUDE<65) %>%
+  mutate(YEAR=floor((CRUISE/100)))
+
+#only cut because duplicated below
+# len <- len %>%
+#   filter(CRUISE>= 199999 & CRUISE<201900,
+#          REGION=="BS")%>%#,  
+#          #START_LATITUDE<65) %>%
+#   mutate(YEAR=floor((CRUISE/100)))
+
+
+############################################# start newdata
+# newdata_bs <- newdata %>%
+#   filter(REGION=="BS") %>% # can use start time to get year, 9 characters total and it is last two
+#   mutate(YEAR=substr(START_TIME,8,9))
+# newdata_bs$YEAR %<>% factor()
+# summary(newdata_bs)
+# hist(as.integer(newdata_bs$YEAR)) # trying to separate out years so I can check that I won't lose anything by just using hauljoin from prior filtering on catch
+# unique(newdata_bs$YEAR)
+# newdata_bs_00 <- newdata_bs %>%
+#   filter(as.integer(YEAR)<20)
+
+hauljoin_list <- unique(catch$HAULJOIN)
+spec <- spec %>%
+  filter(HAULJOIN %in% (hauljoin_list)) %>%
+  mutate(YEAR=as.integer(substr(START_TIME,8,9)))
+# newdata_test <- anti_join(newdata, newdata1, by="HAULJOIN")
+# newdata_test_bs <- newdata_test %>% filter(REGION=="BS")
+remove(hauljoin_list)                                   
+```
+
+```{r summary-ph-newdata}
+# summary(newdata)
+```
+
+```{r look-at-newdata}
+# length(unique(newdata$STATIONID))
+# unique(newdata$SPECIES_CODE) # only has fhs and nrs
+# unique(newdata$REGION)
+# 
+# ggplot()+
+#   geom_point(data= newdata_test,aes(x=START_LONGITUDE, y=START_LATITUDE), alpha=0.1)+
+#   coord_cartesian(xlim=c(-200, -100))+
+#   geom_point(data= newdata1,aes(x=START_LONGITUDE, y=START_LATITUDE), alpha=0.1, color="red")
+# ggplot()+
+#   geom_point(data= newdata_bs_00,aes(x=START_LONGITUDE, y=START_LATITUDE), alpha=0.1)#+
+#   #coord_cartesian(xlim=c(-200, -100))
+```
+
+so all the junk I just did was a sanity check that my filters from before are correct and I can just use hauljoin to filter out newdata. Inspired by the fact that it feels incorrect that there are less rows in specimen than in catch. But that may make sense since I only have fhs and nrs
+
+```{r understanding-which-df-var-together}
+c <- names(catch)
+l <- names(len)
+s <- names(spec)
+# l %in% c
+# l # length frequency and sex are the only additional variables that len has over catch. Catch is redundant but useful to just look at variables over time. 
+# s %in% c # there are a lot of differences between spec and the other two, which makes sense
+# s #has age, weight
+# # i'm carrying around a lot of variables. They mightbe nice to look at later but atm they're distracting. Next plan is to cut them out (i.e. gear, etc)
+# c
+# l
+# s
+```
+
+```{r spatial-subsetting-code-from-making_grid}
+len_e <- len %>%
+  filter(CRUISE>= 199999 & CRUISE<201900,
+         REGION=="BS")%>%#, 
+         #START_LATITUDE<65) %>%
+  mutate(YEAR=floor((CRUISE/100))) %>%
+  group_by(HAULJOIN,SPECIES_CODE) %>%
+  mutate(n_SUBSAMP = sum(FREQUENCY))%>%
+  group_by(HAULJOIN,SPECIES_CODE, LENGTH) %>%
+  mutate(SS_PROPORTION=(FREQUENCY/n_SUBSAMP),
+         n_HAUL = (SS_PROPORTION*CATCH_NUMBER_FISH))
+
+# not sure the following is useful
+# by_len_stat_yr_sx <- len_haul_expanded %>%
+#   group_by(STATIONID,SPECIES_CODE, SEX, YEAR) %>%
+#   mutate(n_SPEC_STATION = sum(FREQUENCY))%>%
+#   group_by(STATIONID,SPECIES_CODE, LENGTH, SEX, YEAR) %>%
+#   mutate(HAUL_S_PROPORTION=(FREQUENCY/n_SPEC_STATION),
+#          n_STATION = (HAUL_S_PROPORTION*CATCH_NUMBER_FISH))%>%
+#   #group_by(STATIONID, SPECIES_CODE,LENGTH, SEX,YEAR) %>%
+#   #summarise(PER_STAT_YEAR =sum(n_STATION))
+```
+
+```{r fig.height=14, fig.width=10}
+ggplot(catch)+
+  geom_point(aes(x=START_LONGITUDE, y=START_LATITUDE, color=SURFACE_TEMPERATURE))+
+  facet_wrap(~YEAR)
+```
+
+
+```{r reading-lorenzos-git-code}
+# lond<-unique(catch$START_LONGITUDE)
+# latd<-sort(unique(catch$START_LATITUDE))
+# # predict.grid<-expand.grid(lond,latd)
+# 
+# 
+# #Add average lat and lon by STATIONID to catch
+# # lat.avg<-tapply(catch$START_LATITUDE,catch$STATIONID,mean)
+# # lon.avg<-tapply(catch$START_LONGITUDE,catch$STATIONID,mean)
+# # index<-match(catch$STATIONID,names(lon.avg))
+# # catch$lon.avg<-lon.avg[index]
+# # catch$lat.avg<-lat.avg[index]
+# 
+# summary(lat.avg)
+# 
+# ggplot(catch)+
+#   geom_point(aes(x=lon.avg, y=lat.avg), alpha=0.1)
+# 
+# ggplot(catch)+
+#   geom_point(aes(x=START_LONGITUDE, y=START_LATITUDE), alpha=0.1)
+# 
+# all.equal(catch$START_LATITUDE, catch$lat.avg)
+```
+
+
+```{r makes-stations-have-avg-lat-lons, fig.height=16, fig.width=12}
+catch <- catch %>%
+  mutate(AVG_LON = (START_LONGITUDE+END_LONGITUDE)/2,
+         AVG_LAT = (START_LATITUDE+END_LATITUDE)/2)
+
+# Add average lat and lon by STATIONID to catch
+STATION_AVG_LAT<-tapply(catch$AVG_LAT,catch$STATIONID,mean)
+STATION_AVG_LON<-tapply(catch$AVG_LON,catch$STATIONID,mean)
+index<-match(catch$STATIONID,names(STATION_AVG_LON))
+catch$STATION_AVG_LON<-STATION_AVG_LON[index]
+catch$STATION_AVG_LAT<-STATION_AVG_LAT[index]
+
+# # testing 
+# testa <- catch %>% filter(STATIONID=="K-20")
+# length(unique(catch$STATION_AVG_LON))
+# #NICE
+
+# ggplot(data=catch) +
+#   geom_point(aes(x=STATION_AVG_LON, y=STATION_AVG_LAT), alpha=0.1)+facet_wrap(~YEAR)==
+
+# do it for other dfs
+index<-match(len_e$STATIONID,names(STATION_AVG_LON))
+len_e$STATION_AVG_LON<-STATION_AVG_LON[index]
+len_e$STATION_AVG_LAT<-STATION_AVG_LAT[index]
+
+index<-match(spec$STATIONID,names(STATION_AVG_LON))
+spec$STATION_AVG_LON<-STATION_AVG_LON[index]
+spec$STATION_AVG_LAT<-STATION_AVG_LAT[index]
+```
+
+
+```{r plots, fig.height=16, fig.width=12}
+# i'm going to make a grid based on yearly avg values at each station for envirmtal var
+# then I'll bin the environmental variable by something reasonable 
+# then I'm going to intersect this shapefile/grid with my expanded length data set
+# then I'll average across each envtal variable area
+# 
+# 
+# catch_sf <- st_as_sf(catch, coords=c("STATION_AVG_LON", "STATION_AVG_LAT"), crs=3571) #3571 is bs crs
+# grid <- st_make_grid(catch_sf, n=c(32,32), what="polygons")
+# ggplot()+
+#   geom_sf(data=grid)+
+#   geom_point(data=catch, aes(x=START_LONGITUDE, y=START_LATITUDE), color="blue", alpha=0.1)+
+#   theme_minimal()+
+#   theme(axis.text.y=element_blank())
+```
+
+```{r okay-fuck-sf-POINTS}
+#I'm gonna make an index of depths bc they shouldn't change
+
+catch <- catch %>%
+  group_by(STATIONID) %>%
+  mutate(AVG_DEPTH = mean(BOTTOM_DEPTH))
+
+# Add average depth by STATIONID to catch
+STATION_AVG_DEPTH<-tapply(catch$AVG_DEPTH,catch$STATIONID,mean) #OOPS#################################################################
+index<-match(catch$STATIONID,names(STATION_AVG_DEPTH))
+catch$STATION_AVG_DEPTH<-STATION_AVG_DEPTH[index]
+names(catch)
+nums <- c(18,33,34,36)
+station_deets <- catch[,nums]
+station_info <- distinct(station_deets)
+
+length(unique(catch$STATIONID))
+
+#saveRDS(station_info, file = "data/station_info.rds")
+
+ggplot(station_info)+
+  geom_point(aes(x = STATION_AVG_LON, y=STATION_AVG_LAT, color=STATION_AVG_DEPTH))
+
+station_info <- na.omit(station_info)
+```
+
+```{r look-at-medians}
+summary(len_e)
+```
+
+```{r overall-median-by-station}
+# gets the median while accounting for the number of times that a length is repeated per haul
+get_median <- function(leng, n_hau){
+  new_list <- rep(leng, round(n_hau))
+  return(median(new_list, na.rm = TRUE))
+}
+
+for_plot <- len_e %>%
+  filter(SPECIES_CODE==10130) %>%
+  group_by(STATIONID) %>% # maybe add SEX
+  summarise(wt_med = get_median(LENGTH, n_HAUL))
+
+for_plot1 <- na.omit(for_plot)
+
+more_for_plot <- inner_join(for_plot1, station_info, by="STATIONID")
+
+ggplot(more_for_plot)+ geom_histogram(aes(x=STATION_AVG_DEPTH))
+
+ggplot(more_for_plot)+ geom_smooth(aes(x=STATION_AVG_DEPTH, y=wt_med))+
+ geom_point(aes(x=STATION_AVG_DEPTH, y=wt_med))
+
+#which(more_for_plot$STATION_AVG_DEPTH==72.03)
+
+#summary(more_for_plot$STATION_AVG_DEPTH)
+```
+
+idk wtf is going on with the scale up there. okay it's all of the nas that I got from doing a full join rather than an inner join
+
+```{r plotting-median-by-yr-again, fig.height=20, fig.width=14}
+# gets the median while accounting for the number of times that a length is repeated per haul
+get_median <- function(leng, n_hau){
+  new_list <- rep(leng, round(n_hau))
+  return(median(new_list, na.rm = TRUE))
+}
+
+plot_dat <- len_e %>%
+  filter(SPECIES_CODE==10130) %>%
+  group_by(STATIONID, YEAR) %>%
+  summarise(MED = get_median(LENGTH, n_HAUL))
+
+plot_dat1 <- inner_join(plot_dat, station_info, by="STATIONID")
+
+ggplot(plot_dat1) + geom_histogram(binwidth=.5,aes(x=STATION_AVG_DEPTH))
+
+summary(plot_dat4$STATION_AVG_DEPTH)
+depth_bin_cuts <- c(21.97,69.57, 92.85, 119.22,656.01)
+plot_dat2 <- plot_dat1
+plot_dat2$DEPTH_BINS <- cut(plot_dat2$STATION_AVG_DEPTH, depth_bin_cuts, include.lowest = TRUE)
+
+ggplot(plot_dat2) + 
+  #geom_smooth(aes(x=STATION_AVG_DEPTH, y=MED)) +
+  geom_point(aes(x=STATION_AVG_LON, y=STATION_AVG_LAT, color=MED)) +
+  facet_grid(YEAR~DEPTH_BINS)
+
+```
+
+```{r now-plots-from-facet-grid, fig.height=20, fig.width=14}
+plot_dat2 <- plot_dat1
+plot_dat2$DEPTH_BINS <- cut(plot_dat2$STATION_AVG_DEPTH, 4, include.lowest = TRUE)
+
+ggplot(plot_dat2) + 
+  geom_density(aes(x=MED)) +
+  facet_grid(YEAR~DEPTH_BINS)
+
+```
+
+```{r plotting-medians-with-temp-line, fig.height=20, fig.width=14}
+get_avg_temp <- function(yr){
+  avg <- which(yearly_avg_temps$AVG_TEMP[YEAR==yr])
+}
+
+plot_dat <- len_e %>%
+  filter(SPECIES_CODE==10130) %>%
+  group_by(STATIONID, YEAR) %>%
+  summarise(AVG_TEMP= mean(GEAR_TEMPERATURE, na.rm = TRUE))
+
+plot_dat3 <- inner_join(plot_dat, plot_dat2, by="STATIONID")
+
+plot_dat4 <- plot_dat3 %>% mutate(YR_AVG_TEMP = get_avg_temp(YEAR.x))
+
+ggplot() +
+  #geom_smooth(aes(x=STATION_AVG_DEPTH, y=MED)) +
+  geom_point(data=plot_dat3,aes(x=AVG_TEMP, y=MED)) +
+  facet_grid(data=plot_dat3,YEAR.x~DEPTH_BINS)
+  #geom_vline(yintercept=yearly_avg_temps$AVG_TEMP)
+
+
+yearly_avg_temps <- catch %>% group_by(YEAR) %>% summarise(AVG_TEMP = mean(GEAR_TEMPERATURE, na.rm=TRUE))
+names(yearly_avg_temps)[2] <- "YEAR_AVG_TEMP"
+plot_dat3 <- plot_dat3[,-2]
+names(plot_dat3)[3] <- "YEAR"
+
+plot_dat4 <- left_join(plot_dat3, yearly_avg_temps, by="YEAR")
+
+ggplot(plot_dat4) + 
+  #geom_smooth(aes(x=STATION_AVG_DEPTH, y=MED)) +
+  geom_point(aes(x=AVG_TEMP, y=MED), alpha=0.1) +
+  facet_grid(YEAR~DEPTH_BINS)+
+  geom_vline(aes(xintercept=YEAR_AVG_TEMP), color="red")
+
+```
+
+
+```{r just-trying-lat-lon-switched, fig.height=20, fig.width=14}
+ggplot(akp) + 
+  geom_point(aes(x=yr_avg_temp, y=med), alpha=0.1) +
+  facet_grid(year~depth_bins, scales="free_x")+
+  geom_vline(aes(xintercept=yr_avg_temp), color="red")
+
+```
+
+

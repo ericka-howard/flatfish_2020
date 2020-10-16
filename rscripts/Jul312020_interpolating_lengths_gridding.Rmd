@@ -1,0 +1,289 @@
+---
+title: "Post 7/21 meeting - Interpolating & Gridding Lengths"
+output: html_notebook
+---
+
+```{r, include=FALSE}
+library(tidyverse)
+library(sf)
+library(magrittr)
+```
+
+```{r import-data, warnings=FALSE, results="hide", message=FALSE}
+catch <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
+len <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch_Length.csv", guess_max = 10000)
+# length_spec <- read_csv("data2/Shelf_Flatfish_Haul_Catch_Length_Specimen.csv", guess_max = 10000)
+bot <- read_csv("data/bottom_type.csv", guess_max = 10000)
+```
+
+```{r filters}
+catch <- catch %>%
+  filter(CRUISE>= 199999 & CRUISE<201900,
+         REGION=="BS") %>%#, 
+         #START_LATITUDE<65) %>%
+  mutate(YEAR=floor((CRUISE/100)))
+len <- len %>%
+  filter(CRUISE>= 199999 & CRUISE<201900,
+         REGION=="BS")%>%#, 
+         #START_LATITUDE<65) %>%
+  mutate(YEAR=floor((CRUISE/100)))
+```
+
+```{r make-things-spatial-2005}
+catch_2005 <- catch %>%
+  filter(YEAR ==2005)
+catch_2005_sf <- st_as_sf(catch_2005, coords=c("START_LONGITUDE", "START_LATITUDE"), crs=3571) #3571 is bs
+grid <- st_make_grid(catch_2005_sf, n=c(32,32), what="polygons")
+ggplot()+
+  geom_sf(data=grid)+
+  geom_point(data=catch_2005, aes(x=START_LONGITUDE, y=START_LATITUDE), color="blue", alpha=0.2)
+#ggplot() +  geom_sf(data = cdn) +  coord_sf(crs = st_crs(3347)) vs. 4326
+#st_as_sf(coords = c("lon", "lat"), crs=aoi_crs) 
+```
+
+```{r make-things-spatial-all}
+catch_sf <- st_as_sf(catch, coords=c("START_LONGITUDE", "START_LATITUDE"), crs=3571) #3571 is bs crs
+grid <- st_make_grid(catch_sf, n=c(32,32), what="polygons")
+ggplot()+
+  geom_sf(data=grid)+
+  geom_point(data=catch, aes(x=START_LONGITUDE, y=START_LATITUDE), color="blue", alpha=0.1)+
+  theme_minimal()+
+  theme(axis.text.y=element_blank())
+```
+
+
+```{r avg-over-squares-DIDNTWORK}
+test <- catch_sf 
+plot(test$SURFACE_TEMPERATURE)
+summary(test)
+
+ggplot()+
+  geom_sf(data=test, aes(fill=GEAR_DEPTH), alpha=0.2)+
+  theme_minimal()+
+  theme(axis.text.y=element_blank())
+```
+
+
+```{r try-stations,fig.height=14, fig.width=10}
+# unique(len$STATIONID)
+# ggplot()+
+#   geom_point(data=len, aes(x=START_LONGITUDE, y=START_LATITUDE), color="blue", alpha=0.2)
+
+# withLetters <- catch_2005 %>%
+#   select(STATIONID, contains(LETTERS))%>%
+#   filter()
+# withoutLetters <- catch_2005 %>%
+#   anti_join(withLetters, by="STATIONID")
+# 
+# unique(catch_2005$STATIONID)
+# unique(withLetters$STATIONID)
+# unique(withoutLetters$STATIONID)
+# k that didn't work. What years are the years with extra stations?
+
+# num_stations <- function(year){
+#   a <- catch %>%
+#     filter(YEAR ==year)
+#   length(unique(a$STATIONID))
+# }
+# 
+# z <- rep(0, 19)
+# for (i in 1:19){
+#   z[i] <- num_stations(1999+i)
+# }
+# z # there's only supposed to be 376 stations though.
+
+a <- catch %>%
+  filter(YEAR ==2007)
+
+usuals <- a$STATIONID
+
+regular_stations <-catch %>%
+  filter(STATIONID %in% usuals)
+irregular_stations <- catch %>%
+  anti_join(regular_stations, by="STATIONID")
+
+length(unique(regular_stations$STATIONID))
+length(unique(irregular_stations$STATIONID))
+
+ggplot()+
+  geom_point(data=regular_stations, aes(x=START_LONGITUDE, y=START_LATITUDE), color="red", alpha=0.2)+
+  geom_point(data= irregular_stations, aes(x=START_LONGITUDE, y=START_LATITUDE), color="blue")+
+  facet_wrap(~YEAR)
+
+```
+
+```{r check-out-by-reg-stations}
+# # a <- catch %>%
+# #   filter(YEAR ==2007)
+# # usuals <- a$STATIONID
+# 
+# reg_stats_len <-len %>%
+#   filter(STATIONID %in% usuals) %>%
+#   group_by(HAULJOIN, SPECIES_CODE)
+#   
+# # so catch_number_species is just the total number of species caught that are lengthed?
+# big_hauls <- len %>% filter(CATCH_WEIGHT>1000)
+# summary(big_hauls)
+# try_now <- big_hauls %>% filter(length(unique(SPECIES_CODE))>1)
+# summary(try_now)
+# my_haul_test <- try_now %>% filter(HAULJOIN==-13486)
+# 
+# howboutit <- my_haul_test %>%
+#   group_by(SPECIES_CODE, SEX) %>%
+#   mutate(num_sampled = sum(FREQUENCY))
+# howboutit2 <- howboutit %>%
+#   group_by(SPECIES_CODE, LENGTH, SEX) %>%
+#   mutate(prop=(FREQUENCY/num_sampled))
+# howboutit3 <- howboutit2 %>%
+#   group_by(SPECIES_CODE, LENGTH, SEX) %>%
+#   mutate(expand_num = (prop*CATCH_NUMBER_FISH))
+# # try_equivalent
+# howboutit_hope <- my_haul_test %>%
+#   group_by(SPECIES_CODE, SEX) %>%
+#   mutate(num_sampled = sum(FREQUENCY))%>%
+#   group_by(SPECIES_CODE, LENGTH, SEX) %>%
+#   mutate(prop=(FREQUENCY/num_sampled))%>%
+#   group_by(SPECIES_CODE, LENGTH, SEX) %>%
+#   mutate(expand_num = (prop*CATCH_NUMBER_FISH))
+# 
+# # all.equal(howboutit3, howboutit_hope)
+# # so it works to use piping for all of it YAY. how about with one grouping?------v
+# 
+# howboutit_hope_more <- my_haul_test %>%
+#   group_by(SPECIES_CODE, SEX) %>%
+#   mutate(num_sampled = sum(FREQUENCY))%>%
+#   group_by(SPECIES_CODE, LENGTH, SEX) %>%
+#   mutate(prop=(FREQUENCY/num_sampled),
+#          expand_num = (prop*CATCH_NUMBER_FISH))
+# # all.equal(howboutit_hope, howboutit_hope_more)
+# # cool that's also all the same. -----------------------^
+# howboutit_hope_morest <- my_haul_test %>%
+#   group_by(SPECIES_CODE, SEX) %>%
+#   mutate(num_sampled = sum(FREQUENCY))%>%
+#   group_by(LENGTH) %>%
+#   mutate(prop=(FREQUENCY/num_sampled),
+#          expand_num = (prop*CATCH_NUMBER_FISH))
+# # all.equal(howboutit_hope_morest, howboutit_hope_more)
+# # that didn't work. So we have our final
+```
+
+```{r try-len-all}
+a <- catch %>%
+  filter(YEAR ==2007)
+usuals <- a$STATIONID
+
+len_haul_expanded <- len %>%
+  filter(STATIONID %in% usuals) %>%
+  group_by(HAULJOIN,SPECIES_CODE, SEX) %>%
+  mutate(n_SUBSAMP = sum(FREQUENCY))%>%
+  group_by(HAULJOIN,SPECIES_CODE, LENGTH, SEX) %>%
+  mutate(SS_PROPORTION=(FREQUENCY/n_SUBSAMP),
+         n_HAUL = (SS_PROPORTION*CATCH_NUMBER_FISH))
+```
+
+```{r, look-at-it-nxlengths, fig.height=14, fig.width=10}
+len_haul_expanded %>%
+  filter(SPECIES_CODE==10130)%>% #10130 10210 10261 10285
+  ggplot()+
+  geom_point(aes(x= LENGTH, y=n_HAUL))+
+  facet_wrap(~YEAR)
+```
+
+```{r, look-at-it-nxlengths-allspec, fig.height=14, fig.width=10}
+#this plot was pretty but not useful
+len_haul_expanded$SPECIES_CODE %<>% factor
+# len_haul_expanded %>%
+#   #filter(SPECIES_CODE==10130)%>% #[[[10130=FHS 10210=YFS 10261=NRS(not sp. or juvenile) 10285=AKP]]]
+#   ggplot()+
+#   geom_point(aes(x= LENGTH, y=SS_PROPORTION, color=SPECIES_CODE), alpha=0.2)+
+#   #geom_smooth(aes(x= LENGTH, y=SS_PROPORTION, color=SPECIES_CODE), alpha=0.2)+
+#   facet_wrap(~YEAR)
+```
+
+```{r why-so-many-nrs-2000}
+len_haul_expanded %>% filter(HAULJOIN==1010936)
+ggplot(len_haul_expanded)+
+  geom_histogram(aes(x=CATCH_NUMBER_FISH))
+big_nums <- len_haul_expanded %>% filter(CATCH_NUMBER_FISH>10000)
+ggplot(big_nums)+
+  geom_histogram(aes(x=CATCH_NUMBER_FISH))
+
+ggplot(big_nums)+
+  geom_point(aes(x=START_LONGITUDE, y=START_LATITUDE, color=YEAR))
+
+summary(big_nums)
+# looks like there are other times this happened.only for YFS and NRS which makes sense
+```
+
+```{r back-to-spatial-subsetting-expansion}
+# code from above that interpolates to haul level
+# len_haul_expanded <- len %>%
+#   filter(STATIONID %in% usuals) %>%
+#   group_by(HAULJOIN,SPECIES_CODE, SEX) %>%
+#   mutate(n_SUBSAMP = sum(FREQUENCY))%>%
+#   group_by(HAULJOIN,SPECIES_CODE, LENGTH, SEX) %>%
+#   mutate(SS_PROPORTION=(FREQUENCY/n_SUBSAMP),
+#          n_HAUL = (SS_PROPORTION*CATCH_NUMBER_FISH))
+station_lengths <- len_haul_expanded %>%
+  group_by(STATIONID,SPECIES_CODE, SEX, YEAR) %>%
+  mutate(n_SPEC_STATION = sum(FREQUENCY))%>%
+  group_by(STATIONID,SPECIES_CODE, LENGTH, SEX, YEAR) %>%
+  mutate(HAUL_S_PROPORTION=(FREQUENCY/n_SPEC_STATION),
+         n_STATION = (HAUL_S_PROPORTION*CATCH_NUMBER_FISH))
+# I think tis is still wrong.
+```
+
+```{r}
+summary(station_lengths)
+#unique(station_lengths$STATIONID)
+pick_one_station <- station_lengths %>% filter(STATIONID=="H-15")
+summary(pick_one_station)
+ggplot(pick_one_station)+
+  geom_histogram(aes(x=LENGTH))+
+  facet_wrap(~SPECIES_CODE)
+```
+
+```{r feel-like-this-works}
+by_len_stat_yr_sx <- len_haul_expanded %>%
+  group_by(STATIONID,SPECIES_CODE, SEX, YEAR) %>%
+  mutate(n_SPEC_STATION = sum(FREQUENCY))%>%
+  group_by(STATIONID,SPECIES_CODE, LENGTH, SEX, YEAR) %>%
+  mutate(HAUL_S_PROPORTION=(FREQUENCY/n_SPEC_STATION),
+         n_STATION = (HAUL_S_PROPORTION*CATCH_NUMBER_FISH))%>%
+  group_by(STATIONID, SPECIES_CODE,LENGTH, SEX,YEAR) %>%
+  summarise(PER_STAT_YEAR =sum(n_STATION))
+```
+
+```{r sanity-checks}
+summary(by_len_stat_yr_sx)
+#[[[10130=FHS 10210=YFS 10261=NRS(not sp. or juvenile) 10285=AKP]]]
+station_key <- catch %>%
+  group_by(STATIONID) %>%
+  summarise(lat = mean((START_LATITUDE+END_LATITUDE)/2),
+            lon = mean((START_LONGITUDE+END_LONGITUDE)/2))
+summary(station_key)
+ggplot(station_key)+
+  geom_point(aes(x=lon, y=lat))
+
+df_4plot <- left_join(by_len_stat_yr_sx, station_key, by="STATIONID")
+# df_4plot$STATIONID %<>% factor
+
+# length(unique(df_4plot$STATIONID))
+# length(unique(station_key$STATIONID))
+# length(unique(by_len_stat_yr_sx$STATIONID))
+
+summary(df_4plot)
+
+
+ggplot()+geom_sf(data=grid, fill="purple", alpha=0.3)+geom_point(data=station_key, aes(x=lon, y=lat)) + theme_minimal() +
+  theme(axis.text.y=element_blank())
+ggplot()+
+  geom_sf(data=grid, fill ="red", alpha=0.3)+
+  geom_point(data=catch, aes(x=START_LONGITUDE, y=START_LATITUDE), alpha=0.1)+
+  theme_minimal()+
+  theme(axis.text.y=element_blank())
+```
+
+
+
+

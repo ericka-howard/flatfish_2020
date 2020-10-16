@@ -1,0 +1,221 @@
+# load libraries
+library(tidyverse)
+library(sf)
+library(magrittr)
+
+# NOTE: [[[10130=fhs 10210=yfs 10261=nrs(not sp. or juvenile) 10285=akp]]]
+
+# so important
+make_lowercase <- function(df){
+  for (i in 1:length(names(df))){
+    names(df)[i] <- tolower(names(df)[i])
+  }
+  return(df)
+}
+
+
+# load data
+catch <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
+len <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch_length.csv", guess_max = 10000)
+# bot <- read_csv("data/bottom_type.csv", guess_max = 10000)
+spec <- read_csv("data/Shelf_Flatfish_Haul_Specimen.csv", guess_max = 10000)
+station_info <- readRDS("data/station_info.rds")
+
+
+# make all lowercase
+catch <- make_lowercase(catch)
+len <- make_lowercase(len)
+# bot <- make_lowercase(bot)
+spec <- make_lowercase(spec)
+station_info <- make_lowercase(station_info)
+
+
+# filter catch
+catch <- catch %>%
+  filter(cruise>= 199999 & cruise<201900,
+         region=="BS") %>%
+  mutate(year=floor((cruise/100)))
+
+# filter specimen
+hauljoin_list <- unique(catch$hauljoin) #"copy" filtering from catch data
+spec <- spec %>%
+  filter(hauljoin %in% (hauljoin_list)) %>%
+  mutate(year=as.integer(substr(start_time,8,9)))
+remove(hauljoin_list)                                   
+
+# filter and extend lengths
+len_e <- len %>%
+  filter(cruise>= 199999 & cruise<201900,
+         region=="BS")%>%
+  mutate(year=floor((cruise/100))) %>%
+  group_by(hauljoin,species_code) %>%
+  mutate(n_subsamp = sum(frequency))%>%
+  group_by(hauljoin,species_code, length) %>%
+  mutate(ss_prop=(frequency/n_subsamp),
+         n_haul = (ss_prop*catch_number_fish))
+remove(len)
+
+#big blue plots (just to look at sst)
+ggplot(catch)+
+  geom_point(aes(x=start_longitude, y=start_latitude, color=surface_temperature))+
+  facet_wrap(~year)+
+  theme_minimal()
+
+############################################################################ below portion shouldn't need to be ran again
+############################################################################ makes station_info.rds
+# 
+# # determine avg lats and lons for each row in catch
+# catch <- catch %>%
+#   mutate(avg_lon = (start_longitude+end_longitude)/2,
+#          avg_lat = (start_latitude+end_latitude)/2)
+# 
+# # determine average lat and lon for each stationid throughout
+# # time by using the catch data averages and, again, averaging
+# st_avg_lat <- tapply(catch$avg_lat,catch$stationid,mean)
+# st_avg_lon <- tapply(catch$avg_lon,catch$stationid,mean)
+# index <- match(catch$stationid,names(st_avg_lon))
+# catch$st_avg_lon <- st_avg_lon[index]
+# catch$st_avg_lat <- st_avg_lat[index]
+# 
+# # add those values into the other dfs
+# index <- match(len_e$stationid,names(st_avg_lon))
+# len_e$st_avg_lon <- st_avg_lon[index]
+# len_e$st_avg_lat <- st_avg_lat[index]
+# 
+# index <- match(spec$stationid,names(st_avg_lon))
+# spec$st_avg_lon <- st_avg_lon[index]
+# spec$st_avg_lat <- st_avg_lat[index]
+# remove(st_avg_lat)
+# remove(st_avg_lon)
+# 
+# # try an index of depths bc they shouldn't change
+# catch <- catch %>%
+#   group_by(stationid) %>%
+#   mutate(avg_depth = mean(bottom_depth))
+# 
+# # add average depth by stationid to catch
+# st_avg_depth <- tapply(catch$avg_depth , catch$stationid,mean)
+# index <- match(catch$stationid , names(st_avg_depth))
+# catch$st_avg_depth <- st_avg_depth[index]
+# remove(st_avg_depth)
+# 
+# # shrink down to only have information about stations
+# names(catch)
+# nums <- c(18,33,34,36)
+# station_deets <- catch[,nums]
+# remove(nums)
+# station_info <- distinct(station_deets)
+# remove(station_deets)
+# remove(index)
+# 
+# # qc
+# length(unique(catch$stationid))
+# station_info <- na.omit(station_info)
+# ggplot(station_info)+
+#   geom_histogram(binwidth=.5,aes(x=st_avg_depth))+ 
+#   theme_light()
+# 
+# # save this df since it should ~remain constant
+# # saveRDS(station_info, file = "data/station_info.rds")
+
+####################################################################### above portion shouldn't need to be ran again
+####################################################################### creates station info rds 
+
+# get station info
+# readRDS(station_info, file = "data/station_info.rds")
+
+# check things out
+ggplot(station_info)+
+  geom_point(aes(x = st_avg_lon, y=st_avg_lat, color=st_avg_depth))+
+  theme_light()
+
+###################################################################################
+
+# gets the median while accounting for the number of times that a length is repeated per haul
+get_median <- function(l, n){
+  new_list <- rep(l, round(n))
+  return(median(new_list, na.rm = TRUE))
+}
+
+# take interpolated haul lengths and try to make them easily plot-able
+# by determining medians. then combine with station_info 
+get_yrly_st_medians <- function(spec_code){
+  dat <- len_e %>%
+    filter(species_code==spec_code) %>% # fhs
+    group_by(stationid, year, sex) %>% # try including sex?
+    summarise(med = get_median(length, n_haul))
+  dat <- inner_join(dat, station_info, by="stationid")
+  return(dat)
+}
+
+# do for each species
+fhs <- get_yrly_st_medians(10130)
+yfs <- get_yrly_st_medians(10210)
+nrs <- get_yrly_st_medians(10261)
+akp <- get_yrly_st_medians(10285)
+
+make_depth_bins <- function(df){
+  sumry <- summary(df$st_avg_depth)
+  cuts <- c(sumry[1], sumry[2], sumry[3], sumry[5], sumry[6])
+  df$depth_bins <- cut(df$st_avg_depth, cuts, include.lowest = TRUE)
+  return(df)
+}
+
+# do for all
+fhs <- make_depth_bins(fhs)
+yfs <- make_depth_bins(yfs)
+nrs <- make_depth_bins(nrs)
+akp <- make_depth_bins(akp) 
+
+# plot now with facet_grid and depth bins, mostly useless bc just lat/lon (/sanity check)
+# ggplot(fhs) + 
+#   geom_point(aes(x=st_avg_lon, y=st_avg_lat, color=med)) +
+#   facet_grid(year~depth_bins)+
+#   theme_light()
+
+# plot  with density functions for the medians. pretty boring
+large_density_plot <- function(df, df_name){
+  ggplot(df)+
+    geom_density(aes(x=med))+
+    facet_grid(year~depth_bins)+
+    theme_light()+
+    ggtitle(df_name)
+}
+
+large_density_plot(fhs, "fhs")
+
+###############################################################################
+
+# make list of the average gear temperature for each year
+yearly_avg_temps <- catch %>% 
+  group_by(year) %>% 
+  summarise(yr_avg_temp = mean(gear_temperature, na.rm=TRUE))
+
+# add that list of average gear temp/year to each df
+get_ref_temp <- function(df){
+  return(left_join(df, yearly_avg_temps, by="year"))
+}
+akp <- get_ref_temp(akp)
+yfs <- get_ref_temp(yfs)
+nrs <- get_ref_temp(nrs)
+fhs <- get_ref_temp(fhs)
+
+# so this all isn't great because I've consolidated to the point of
+# having lost individual haul temperature data... 
+# instead I have the average station temperature data per year
+# and then I'm comparing it to the survey average each year
+# which is fine but not super useful? 
+
+ggplot(akp) + 
+  geom_point(aes(x=yr_avg_temp, y=med), alpha=0.1) +
+  facet_grid(year~depth_bins, scales="free_x")+
+  geom_vline(aes(xintercept=yr_avg_temp), color="red")
+
+# mean temp makes things look very boring
+
+# try using lat/lon in grid instead? 
+ggplot(plot_dat2) + 
+  geom_point(aes(x=year, y=st_avg_depth, color=med)) +
+  facet_grid(st_avg_lat~st_avg_lon, scales="free")
+
+# NO. NEED TO TRY "residual" idea

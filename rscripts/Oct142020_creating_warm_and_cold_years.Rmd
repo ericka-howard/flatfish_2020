@@ -1,0 +1,34 @@
+---
+title: "Using Cold and Warm Years"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load-libraries, warning=FALSE, error=FALSE, message=FALSE}
+source("./functions.R")
+source("./data.R")
+```
+
+```{r}
+overall <- haul %>%
+  filter(bottom_depth > 50 & bottom_depth <100) %>%
+  distinct(hauljoin, gear_temperature)
+overall_mean <- mean(overall$gear_temperature, na.rm = TRUE)
+
+year_temp_categories <- haul %>%
+  filter(bottom_depth > 50 & bottom_depth <100) %>%
+  distinct(hauljoin, gear_temperature, year) %>%
+  group_by(year) %>%
+  summarise(yr_temp = mean(gear_temperature, na.rm = TRUE)) %>%
+  mutate(warm_cold = ifelse(yr_temp>overall_mean, "warm", "cold"))
+```
+
+```{r}
+
+```
+
