@@ -10,11 +10,24 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r load-libraries, warning=FALSE, error=FALSE, message=FALSE}
+# Libraries ---------
+library(tidyverse)
+library(sf)
+library(magrittr)
+library(viridis)
+library(grDevices)
+library(ggpubr)
+library(here)
+```
+
+```{r load-source-files, warning=FALSE, error=FALSE, message=FALSE}
+# Source Scripts -------
 source("./functions.R")
 source("./data.R")
 ```
 
-```{r}
+
+```{r create-year-temp-categories}
 overall <- haul %>%
   filter(bottom_depth > 50 & bottom_depth <100) %>%
   distinct(hauljoin, gear_temperature)
