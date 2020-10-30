@@ -1,6 +1,8 @@
 ---
 title: "Post 7/21 meeting - Interpolating & Gridding Lengths"
 output: html_notebook
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r, include=FALSE}
