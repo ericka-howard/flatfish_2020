@@ -27,19 +27,22 @@ separate_spec <- function(spec_code){
 
 # creates 8 bins for bottom_depth in depth_bins variable
 make_depth_bins <- function(df){
-  df$depth_bins <- cut(df$bottom_depth, breaks = 8)
+  cutoffs <- quantile(df$bottom_depth, probs = seq(0,1,0.125), na.rm = TRUE)
+  df$depth_bins <- cut(df$bottom_depth, breaks = cutoffs)
   return(df)
 }
 
 # creates 8 bins for gear_temperature in temp_bins variable
 make_temp_bins <- function(df){
-  df$temp_bins <- cut(df$gear_temperature, breaks=8)
+  cutoffs <- quantile(df$gear_temperature, probs = seq(0,1,0.125), na.rm = TRUE)
+  df$temp_bins <- cut(df$gear_temperature, breaks=cutoffs)
   return(df)
 }
 
 # creates 8 bins for length in length_bins variable
 make_length_bins <- function(df){
-  df$length_bins <- cut(df$length, breaks=8)
+  cutoffs <- quantile(df$length, probs = seq(0,1,0.125), na.rm = TRUE)
+  df$length_bins <- cut(df$length, breaks=cutoffs)
   return(df)
 }
 
@@ -53,8 +56,9 @@ plot_box_depth <- function(df, df_name){
                  outlier.color = "grey",
                  outlier.shape=1) +
     theme_pubr()+
-    ggtitle(paste(df_name, "Depth", "by", "Percentiles", sep = " "))+
-    xlab("Depth Bins (m)")+
+    labs(title=paste(df_name, "Depth", "by", "Length", sep = " "),
+         subtitle="Data has been grouped such that each box contains 1/8 of the data")+
+    xlab("Grouped Depth (m)")+
     ylab("Length(mm)")
 }
 
@@ -66,8 +70,9 @@ plot_box_temp <- function(df, df_name){
                  outlier.color = "grey",
                  outlier.shape=1) +
     theme_pubr()+
-    ggtitle(paste(df_name, "Temperature", "by", "Percentiles", sep = " "))+
-    xlab("Temperature Bins")+
+    labs(title=paste(df_name, "Temperature", "by", "Length", sep = " "),
+         subtitle="Data has been grouped such that each box contains 1/8 of the data")+
+    xlab("Grouped Temperature (°C)")+
     ylab("Length (mm)")
 }
 
@@ -80,7 +85,8 @@ plot_box_ldepth <- function(df, df_name){
                  outlier.shape=1) +
     coord_cartesian(ylim=c(0, 225))+
     theme_pubr()+
-    ggtitle(paste(df_name, "Length", "by", "Depth", "at", "Percentiles", sep = " "))+
+    labs(title=paste(df_name, "Length", "by", "Depth", sep = " "),
+         subtitle="Data has been grouped such that each box contains 1/8 of the data")+
     xlab("Length Bins (mm)")+
     ylab("Bottom Depth (m)")
 }
@@ -95,9 +101,10 @@ plot_box_ltemp <- function(df, df_name){
                  outlier.shape=1) +
     coord_cartesian(ylim=c(-2.5, 12.5))+
     theme_pubr()+
-    ggtitle(paste(df_name, "Length", "by", "Temperature", "at", "Percentiles", sep = " "))+
+    labs(title=paste(df_name, "Length", "by", "Temperature", sep = " "),
+         subtitle="Data has been grouped such that each box contains 1/8 of the data")+
     xlab("Length Bins (mm)")+
-    ylab("Gear Temperature")
+    ylab("Gear Temperature (°C)")
 }
 
 # *** Foursquare Plot Functions -----

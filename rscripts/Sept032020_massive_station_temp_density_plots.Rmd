@@ -1,6 +1,8 @@
 ---
 title: "R Notebook"
 output: html_notebook
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r libraries}
@@ -23,11 +25,11 @@ make_lowercase <- function(df){
 
 
 # load data
-catch <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
-len <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch_length.csv", guess_max = 10000)
+catch <- read_csv(".././data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
+len <- read_csv(".././data/data2/Shelf_Flatfish_Haul_Catch_length.csv", guess_max = 10000)
 # bot <- read_csv("data/bottom_type.csv", guess_max = 10000)
-spec <- read_csv("data/Shelf_Flatfish_Haul_Specimen.csv", guess_max = 10000)
-station_info <- readRDS("data/station_info.rds")
+spec <- read_csv(".././data/Shelf_Flatfish_Haul_Specimen.csv", guess_max = 10000)
+station_info <- readRDS(".././data/datapbsmapping/station_info.rds")
 
 
 # make all lowercase
@@ -72,9 +74,6 @@ ggplot(catch)+
   geom_point(aes(x=start_longitude, y=start_latitude, color=surface_temperature))+
   facet_wrap(~year)+
   theme_minimal()
-
-# get station info
-readRDS(station_info, file = "data/station_info.rds")
 
 # check things out
 ggplot(station_info)+

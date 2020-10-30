@@ -16,8 +16,8 @@ library(here)
 
 # Source Scripts -------
 
-source("./functions.R")
-source("./data.R")
+source("./rscripts/functions.R")
+source("./rscripts/data.R")
 
 # Analysis -----
 

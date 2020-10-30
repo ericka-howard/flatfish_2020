@@ -1,0 +1,104 @@
+---
+title: "Update Plots to have warm and cold years"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r load-libraries, warning=FALSE, error=FALSE, message=FALSE}
+# Libraries ---------
+library(tidyverse)
+library(sf)
+library(magrittr)
+library(viridis)
+library(grDevices)
+library(ggpubr)
+library(here)
+```
+
+```{r load-source-files, warning=FALSE, error=FALSE, message=FALSE}
+# Source Scripts -------
+source("./rscripts/functions.R")
+source("./rscripts/data.R")
+yr_temp_categories <- read_rds("./output/year_temp_categories.rds")
+```
+
+
+# Contour Plots
+
+```{r data-mgmt-for-contour-plots, warning=FALSE, error=FALSE, message=FALSE}
+add_warm_cold <- function(df){
+  df <- df %>%
+    left_join(yr_temp_categories, by="year")
+return(df)
+}
+
+make_contour_count_rows <- function(df=akp, y=gear_temperature, y_name="gear_temperature"){
+  yvar <- enquo(y)
+  df_wc <- add_warm_cold(df)
+  df_cut <- df_wc[, c(y_name, "length", "n_haul", "warm_cold")]
+  df_new <- df_cut %>%
+    group_by(warm_cold, length, !!yvar) %>%
+    summarise(num =round(sum(n_haul))) %>%
+    uncount(num)
+  return(df_new)
+}
+
+p_akp_temp <- make_contour_count_rows(akp, gear_temperature, "gear_temperature")
+p_akp_depth <- make_contour_count_rows(akp, bottom_depth, "bottom_depth")
+p_fhs_temp <- make_contour_count_rows(fhs, gear_temperature, "gear_temperature")
+p_fhs_depth <- make_contour_count_rows(fhs, bottom_depth, "bottom_depth")
+p_nrs_temp <- make_contour_count_rows(nrs, gear_temperature, "gear_temperature")
+p_nrs_depth <- make_contour_count_rows(nrs, bottom_depth, "bottom_depth")
+p_yfs_temp <- make_contour_count_rows(yfs, gear_temperature, "gear_temperature")
+p_yfs_depth <- make_contour_count_rows(yfs, bottom_depth, "bottom_depth")
+```
+
+```{r}
+# TEMPORARY FOR SAVING DATA
+write_rds(p_nrs_temp, path = "./output/for_serv/p_nrs_temp.rds")
+write_rds(p_nrs_depth, path = "./output/for_serv/p_nrs_depth.rds")
+write_rds(p_yfs_temp, path = "./output/for_serv/p_yfs_temp.rds")
+write_rds(p_yfs_depth, path = "./output/for_serv/p_yfs_depth.rds")
+```
+
+```{r print-out-contour-plots, warning=FALSE, error=FALSE, message=FALSE, fig.height=8, fig.width=10}
+make_contour_plot <- function(df, df_name, y, y_name){
+  yvar <- enquo(y)
+  ggplot(df)+
+    geom_density2d(aes(x=length, y=!!yvar))+
+    facet_wrap(~warm_cold)+
+    ggtitle(paste(df_name, "Length by", y_name, sep=" "))+
+    xlab("Length (mm)")+
+    ylab(y_name)+
+    theme_pubr()
+}
+akp_temp_contour <- make_contour_plot(p_akp_temp, "Alaska Plaice", gear_temperature, "Temperature (°C)")
+akp_depth_contour <- make_contour_plot(p_akp_depth, "Alaska Plaice", bottom_depth, "Bottom Depth (m)")
+fhs_temp_contour <- make_contour_plot(p_fhs_temp, "Flathead Sole", gear_temperature, "Temperature (°C)")
+fhs_depth_contour <- make_contour_plot(p_fhs_depth, "Flathead Sole", bottom_depth, "Bottom Depth (m)")
+
+nrs_temp_contour <- make_contour_plot(p_nrs_temp, "Northern Rock Sole", gear_temperature, "Temperature (°C)")
+nrs_depth_contour <- make_contour_plot(p_nrs_depth, "Northern Rock Sole", bottom_depth, "Bottom Depth (m)")
+yfs_temp_contour <- make_contour_plot(p_yfs_temp, "Yellowfin Sole", gear_temperature, "Temperature (°C)")
+yfs_depth_contour <- make_contour_plot(p_yfs_depth, "Yellowfin Sole", bottom_depth, "Bottom Depth (m)")
+```
+
+```{r}
+ggsave(filename = "akp_temp_contour.tiff", plot = akp_temp_contour, width=400, height=400, units = "mm", dpi=300, path = "./output/")
+ggsave(filename = "akp_depth_contour.tiff", plot = akp_depth_contour, width=400, height=400, units = "mm", dpi=300, path = "./output/")
+
+ggsave(filename = "fhs_temp_contour.tiff", plot = fhs_temp_contour, width=400, height=400, units = "mm", dpi=300, path = "./output/")
+ggsave(filename = "fhs_depth_contour.tiff", plot = fhs_depth_contour, width=400, height=400, units = "mm", dpi=300, path = "./output/")
+
+#proceed with caution, computationally intensive
+ggsave(filename = "nrs_temp_contour.tiff", plot = nrs_temp_contour, width=400, height=400, units = "mm", dpi=300, path = "./output/")
+ggsave(filename = "nrs_depth_contour.tiff", plot = nrs_depth_contour, width=400, height=400, units = "mm", dpi=300, path = "./output/")
+
+ggsave(filename = "yfs_temp_contour.tiff", plot = yfs_temp_contour, width=400, height=400, units = "mm", dpi=300, path = "./output/")
+ggsave(filename = "yfs_depth_contour.tiff", plot = yfs_depth_contour, width=400, height=400, units = "mm", dpi=300, path = "./output/")
+
+```
+
+

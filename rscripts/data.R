@@ -6,8 +6,8 @@
 
 # Import Data -----
 
-len <- read_csv(".././data/data2/Shelf_Flatfish_Haul_Catch_Length.csv", guess_max = 10000)
-haul <- read_csv(".././data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
+len <- read_csv("./data/data2/Shelf_Flatfish_Haul_Catch_Length.csv", guess_max = 10000)
+haul <- read_csv("./data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
 
 # Data Wrangle -----
 

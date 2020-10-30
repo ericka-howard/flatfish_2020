@@ -1,6 +1,8 @@
 ---
 title: "proofs"
 output: html_notebook
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r, include=FALSE}
@@ -11,13 +13,13 @@ library(magrittr)
 ```
 
 ```{r import-data, warnings=FALSE, results="hide", message=FALSE}
-catch <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
-len <- read_csv("data/data2/Shelf_Flatfish_Haul_Catch_Length.csv", guess_max = 10000)
+catch <- read_csv(".././data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
+len <- read_csv(".././data/data2/Shelf_Flatfish_Haul_Catch_Length.csv", guess_max = 10000)
 # # length_spec <- read_csv("data2/Shelf_Flatfish_Haul_Catch_Length_Specimen.csv", guess_max = 10000)
 # bot <- read_csv("data/bottom_type.csv", guess_max = 10000)
 #newdata <- read_csv("data/Shelf_Flatfish_Haul_Specimen.csv", guess_max = 10000)
-spec <- read_csv("data/Shelf_Flatfish_Haul_Specimen.csv", guess_max = 10000)
-station_info <- readRDS("data/station_info.rds")
+spec <- read_csv(".././data/Shelf_Flatfish_Haul_Specimen.csv", guess_max = 10000)
+station_info <- readRDS(".././data/station_info.rds")
 ```
 
 ```{r filters}
@@ -191,7 +193,7 @@ spec$STATION_AVG_LAT<-STATION_AVG_LAT[index]
 #   theme(axis.text.y=element_blank())
 ```
 
-```{r okay-fuck-sf-POINTS}
+```{r okay-forget-sf-POINTS}
 #I'm gonna make an index of depths bc they shouldn't change
 
 catch <- catch %>%
@@ -247,7 +249,7 @@ ggplot(more_for_plot)+ geom_smooth(aes(x=STATION_AVG_DEPTH, y=wt_med))+
 #summary(more_for_plot$STATION_AVG_DEPTH)
 ```
 
-idk wtf is going on with the scale up there. okay it's all of the nas that I got from doing a full join rather than an inner join
+idk what's going on with the scale up there. okay it's all of the nas that I got from doing a full join rather than an inner join
 
 ```{r plotting-median-by-yr-again, fig.height=20, fig.width=14}
 # gets the median while accounting for the number of times that a length is repeated per haul
