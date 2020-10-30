@@ -6,12 +6,12 @@
 
 # Libraries -------
 
-library(tidyverse)
-library(sf)
-library(magrittr)
-library(viridis)
-library(grDevices)
-library(ggpubr)
+# library(tidyverse)
+# library(sf)
+# library(magrittr)
+# library(viridis)
+# library(grDevices)
+# library(ggpubr)
 
 # Directories -------
 

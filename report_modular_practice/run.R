@@ -4,6 +4,15 @@
 #' date: 2020-10-13
 #' ---
 
+# Libraries ---------
+
+library(tidyverse)
+library(sf)
+library(magrittr)
+library(viridis)
+library(grDevices)
+library(ggpubr)
+
 # Source Scripts -------
 
 source("./functions.R")
