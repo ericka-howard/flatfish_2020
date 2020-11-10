@@ -28,83 +28,107 @@ separate_spec <- function(spec_code){
 # creates 8 bins for bottom_depth in depth_bins variable
 make_depth_bins <- function(df){
   cutoffs <- quantile(df$bottom_depth, probs = seq(0,1,0.125), na.rm = TRUE)
-  df$depth_bins <- cut(df$bottom_depth, breaks = cutoffs)
+  df$depth_bins <- cut(df$bottom_depth, breaks = cutoffs, include.lowest = TRUE)
   return(df)
 }
 
 # creates 8 bins for gear_temperature in temp_bins variable
 make_temp_bins <- function(df){
   cutoffs <- quantile(df$gear_temperature, probs = seq(0,1,0.125), na.rm = TRUE)
-  df$temp_bins <- cut(df$gear_temperature, breaks=cutoffs)
+  df$temp_bins <- cut(df$gear_temperature, breaks=cutoffs, include.lowest = TRUE)
   return(df)
 }
 
 # creates 8 bins for length in length_bins variable
 make_length_bins <- function(df){
   cutoffs <- quantile(df$length, probs = seq(0,1,0.125), na.rm = TRUE)
-  df$length_bins <- cut(df$length, breaks=cutoffs)
+  df$length_bins <- cut(df$length, breaks=cutoffs, include.lowest = TRUE)
   return(df)
 }
 
 # *** Plotting Functions ------
 
+# first create theme
+th <- theme_pubr(
+  legend.title = element_text(size = 14, face = bold),
+  legend.text = element_text(size = 12),
+  legend.background = element_rect(fill = "lightgrey"),
+  legend.key.size = unit(1.5, "cm"),
+  legend.key.width = unit(0.5, "cm")
+)
+
 # creates depth binned bottom_depth boxplots
 plot_box_depth <- function(df, df_name){
   ggplot(df) + 
-    geom_boxplot(aes(x=depth_bins, y=length),
+    geom_boxplot(aes(x=depth_bins, 
+                     y=length,
+                     fill = warm_cold),
+                     # color = warm_cold),
                  outlier.size = 1,
                  outlier.color = "grey",
                  outlier.shape=1) +
-    theme_pubr()+
-    labs(title=paste(df_name, "Depth", "by", "Length", sep = " "),
-         subtitle="Data has been grouped such that each box contains 1/8 of the data")+
-    xlab("Grouped Depth (m)")+
-    ylab("Length(mm)")
+    th+
+    scale_fill_manual(values = c("warm"="#95D055FF", "cold"="#404788FF"))+
+    labs(title=df_name,
+      fill = "Warm or Cold Year")+
+    xlab(" ")+
+    ylab(" ")
 }
 
 # creates temp binned gear_temperature boxplots
 plot_box_temp <- function(df, df_name){
   ggplot(df) + 
-    geom_boxplot(aes(x=temp_bins, y=length),
+    geom_boxplot(aes(x=temp_bins,
+                     y=length,
+                     fill = warm_cold),
+                     #color=warm_cold),
                  outlier.size = 1,
                  outlier.color = "grey",
                  outlier.shape=1) +
-    theme_pubr()+
-    labs(title=paste(df_name, "Temperature", "by", "Length", sep = " "),
-         subtitle="Data has been grouped such that each box contains 1/8 of the data")+
-    xlab("Grouped Temperature (°C)")+
-    ylab("Length (mm)")
+    th +
+    scale_fill_manual(values = c("warm"="#95D055FF", "cold"="#404788FF"))+
+    labs(title=df_name,
+         fill = "Warm or Cold Year")+
+    xlab(" ")+
+    ylab(" ")
 }
 
 # creates length binned bottom_depth boxplots
 plot_box_ldepth <- function(df, df_name){
   ggplot(df) + 
-    geom_boxplot(aes(x=length_bins, y=bottom_depth),
+    geom_boxplot(aes(x=length_bins,
+                     y=bottom_depth,
+                     fill= warm_cold),
+                     #color = warm_cold),
                  outlier.size = 1,
                  outlier.color = "grey",
                  outlier.shape=1) +
     coord_cartesian(ylim=c(0, 225))+
-    theme_pubr()+
-    labs(title=paste(df_name, "Length", "by", "Depth", sep = " "),
-         subtitle="Data has been grouped such that each box contains 1/8 of the data")+
-    xlab("Length Bins (mm)")+
-    ylab("Bottom Depth (m)")
+    th+
+    scale_fill_manual(values = c("warm"="#95D055FF", "cold"="#404788FF"))+
+    labs(title=df_name,
+         fill = "Warm or Cold Year")+
+    xlab(" ")+
+    ylab(" ")
 }
 
 # creates length binned gear_temperature boxplots
 plot_box_ltemp <- function(df, df_name){
   ggplot(df) + 
     geom_boxplot(aes(x=length_bins, 
-                     y=gear_temperature),
+                     y=gear_temperature,
+                     fill = warm_cold),
+                     #color = warm_cold),
                  outlier.size = 1,
                  outlier.color = "grey",
                  outlier.shape=1) +
     coord_cartesian(ylim=c(-2.5, 12.5))+
-    theme_pubr()+
-    labs(title=paste(df_name, "Length", "by", "Temperature", sep = " "),
-         subtitle="Data has been grouped such that each box contains 1/8 of the data")+
-    xlab("Length Bins (mm)")+
-    ylab("Gear Temperature (°C)")
+    th+
+    scale_fill_manual(values = c("warm"="#95D055FF", "cold"="#404788FF"))+
+    labs(title=df_name,
+         fill = "Warm or Cold Year")+
+    xlab(" ")+
+    ylab(" ")
 }
 
 # *** Foursquare Plot Functions -----

@@ -34,16 +34,51 @@ dd <- coordinate_boxplots("depth", "depth")
 tt <- coordinate_boxplots("temp", "temp")
 
 # turn those lists of boxplots into foursquare plots
-ld_4square <- ggarrange(plotlist = ld, ncol=2, nrow=2)
-lt_4square <- print(ggarrange(plotlist = lt, ncol=2, nrow=2))
-dd_4square <- print(ggarrange(plotlist = dd, ncol=2, nrow=2))
-tt_4square <- print(ggarrange(plotlist = tt, ncol=2, nrow=2))
+ld_4square <- ggarrange(plotlist = ld, ncol=2, nrow=2, common.legend = TRUE, legend = "bottom")
+lt_4square <- print(ggarrange(plotlist = lt, ncol=2, nrow=2, common.legend = TRUE, legend = "right"))
+dd_4square <- print(ggarrange(plotlist = dd, ncol=2, nrow=2, common.legend = TRUE, legend = "left"))
+tt_4square <- print(ggarrange(plotlist = tt, ncol=2, nrow=2, common.legend = TRUE, legend = "bottom"))
 
+# add titles 
+ld_4square <- annotate_figure(ld_4square, 
+                              top= text_grob("Comparison of Length vs. Depth values for warm and cold years",
+                                             face="bold",
+                                             size=14),
+                              bottom = "Length (mm)",
+                              left = "Depth (m)")
+lt_4square <- annotate_figure(lt_4square, 
+                              top= text_grob("Comparison of length vs. temperature values for warm and cold years",
+                                             face="bold",
+                                             size=14),
+                              bottom = "Length (mm)",
+                              left = "Gear Temperature (°C)")
+        
+dd_4square <- annotate_figure(dd_4square, 
+                             top= text_grob("Comparison of length vs. depth values for warm and cold years",
+                                            face="bold",
+                                            size=14),
+                             bottom = "Length (mm)",
+                             left = "Depth (m)")
+        
+tt_4square <- annotate_figure(tt_4square, 
+                              top= text_grob("Comparison of length vs. temperature values for warm and cold years",
+                                             face="bold",
+                                             size=14),
+                              bottom = "Length (mm)",
+                              left = "Gear Temperature (°C)")
 
 # *** Save Outputs -----
 
 #Save your plot so you can use and find it later. 
-ggsave(filename = "foursquare_lengthbins_depth.tiff", plot = ld_4square, width=400, height=400, units = "mm", dpi=300, path = "./output/")
-ggsave(filename = "foursquare_lengthbins_temp.tiff", plot = lt_4square, width=400, height=400, units = "mm", dpi=300,path = "./output/")
-ggsave(filename = "foursquare_depthbins_depth.tiff", plot = dd_4square, width=400, height=400, units = "mm", dpi=300,path = "./output/")
-ggsave(filename = "foursquare_tempbins_temp.tiff", plot = tt_4square, width=400, height=400, units = "mm", dpi=300,path = "./output/")
+ggsave(filename = "foursquare_lengthbins_depth.tiff", 
+       plot = ld_4square, width=400, height=400, 
+       units = "mm", dpi=300, path = "./output/")
+ggsave(filename = "foursquare_lengthbins_temp.tiff", 
+       plot = lt_4square, width=400, height=400, 
+       units = "mm", dpi=300,path = "./output/")
+ggsave(filename = "foursquare_depthbins_depth.tiff", 
+       plot = dd_4square, width=400, height=400, 
+       units = "mm", dpi=300,path = "./output/")
+ggsave(filename = "foursquare_tempbins_temp.tiff", 
+       plot = tt_4square, width=400, height=400, 
+       units = "mm", dpi=300,path = "./output/")

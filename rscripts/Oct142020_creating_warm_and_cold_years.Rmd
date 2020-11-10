@@ -108,8 +108,35 @@ ggplot(data=year_temp_categories_keep_other_vars)+
 ```
 
 ```{r}
-write_rds(year_temp_categories, path = ".././output/year_temp_categories.rds")
+#write_rds(year_temp_categories, path = ".././output/year_temp_categories.rds")
+```
+
+```{r}
+# # creates warm/cold boxplots
+# plot_box_wc <- function(df, df_name){
+#   ggplot(df) + 
+#     geom_boxplot(aes(x=length_bins, 
+#                      y=bottom_depth,
+#                      fill=warm_cold),
+#                  outlier.size = 1,
+#                  outlier.color = "grey",
+#                  outlier.shape=1) + 
+#     coord_cartesian(ylim=c(0, 225))+
+#     scale_fill_viridis(discrete=TRUE)+
+#     theme_pubr()+
+#     labs(title=paste(df_name, "Length", "by", "Depth", sep = " "),
+#          subtitle="Data has been grouped such that each box contains 1/8 of the data")+
+#     xlab("Length Bins (mm)")+
+#     ylab("Bottom Depth (m)")
+# }
 ```
 
 
+```{r}
+# akp <- coordinate_binning(akp)
+# akp <- akp %>% 
+#   filter(!is.na(gear_temperature)) %>%
+#   mutate(warm_cold = ifelse(gear_temperature>overall_mean, "warm", "cold"))
+# plot_box_wc(akp, "Alaska Plaice")
+```
 

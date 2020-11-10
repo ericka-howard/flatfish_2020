@@ -6,22 +6,28 @@
 
 # Import Data -----
 
-len <- read_csv("./data/data2/Shelf_Flatfish_Haul_Catch_Length.csv", guess_max = 10000)
-haul <- read_csv("./data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
+len <- read_csv("././data/data2/Shelf_Flatfish_Haul_Catch_Length.csv", guess_max = 10000)
+haul <- read_csv("././data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
+catch <- read_csv("././data/data2/Shelf_Flatfish_Haul_Catch.csv", guess_max = 10000)
+year_temp_categories <- read_rds("./output/year_temp_categories.rds")
 
 # Data Wrangle -----
 
 # make all lowercase
 len <- make_lowercase(len)
 haul <- make_lowercase(haul)
+catch <- make_lowercase(catch)
 
-# get haul set up 
-haul <- haul %>%
-  # get only 2000-2018 and only Bering Sea
-  filter(cruise>= 199999 & cruise<201900,
-         region=="BS")%>%
-  # create year variable
-  mutate(year=floor((cruise/100)))
+# create dataframe just for warm_cold variable
+warm_cold_df <- haul %>%
+  filter(bottom_depth > 50 & bottom_depth <100) %>%
+  distinct(hauljoin, .keep_all = TRUE)
+
+# use that dataframe to get the overall average temp from 50-100m
+overall_temp_mean <- mean(warm_cold_df$gear_temperature, na.rm = TRUE)
+
+# now create list of warm years
+warm_years <- year_temp_categories$year[which(year_temp_categories$warm_cold == 'warm')]
 
 # create len_e which has lengths extrapolated to haul level by species
 len_e <- len %>%
@@ -35,9 +41,30 @@ len_e <- len %>%
   mutate(n_subsamp = sum(frequency))%>%
   group_by(hauljoin,species_code, length) %>%
   mutate(ss_prop=(frequency/n_subsamp),
-         n_haul = (ss_prop*catch_number_fish))
+         n_haul = (ss_prop*catch_number_fish)) %>%
+  # gets rid of missing temperature, depth, and length values
+  filter(!is.na(gear_temperature),
+         !is.na(bottom_depth),
+         !is.na(length)) %>%
+  # creates a variable that splits warm and cold up 
+  mutate(warm_cold = ifelse(year %in% warm_years, "warm", "cold"))
+
 # removes the large length dataset from our environment (bc we have the expanded one now)
 remove(len)
+
+# get haul set up 
+haul <- haul %>%
+  # get only 2000-2018 and only Bering Sea
+  filter(cruise>= 199999 & cruise<201900,
+         region=="BS")%>%
+  # create year variable
+  mutate(year=floor((cruise/100)))
+
+# filter catch
+catch <- catch %>%
+  filter(cruise>= 199999 & cruise<201900,
+         region=="BS") %>%
+  mutate(year=floor((cruise/100)))
 
 # divide out species
 akp <- separate_spec(10285)
