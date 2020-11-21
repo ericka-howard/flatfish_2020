@@ -1,27 +1,9 @@
 #' title: EBS Continental Shelf Survey Flatfish Visualizations
 #' purpose: This script creates plots of Alaska plaice, flathead sole, northern rock sole, and yellowfin sole
 #'          from 2000-2018 based on the RACE EBS survey
-#' date: 2020-10-13
+#' date: 2020-11-21
 #' ---
 
-# Functions -------
-
-# *** Data Management Functions -----
-
-# makes all the column names lowercase
-make_lowercase <- function(df){
-  for (i in 1:length(names(df))){
-    names(df)[i] <- tolower(names(df)[i])
-  }
-  return(df)
-}
-
-# takes interpolated haul lengths and split off a species
-separate_spec <- function(spec_code){
-  dat <- len_e %>%
-    filter(species_code==spec_code)
-  return(dat)
-}
 
 # *** Binning Functions (should combine) -----
 
@@ -49,8 +31,8 @@ make_length_bins <- function(df){
 # *** Plotting Functions ------
 
 # first create theme
-th <- theme_pubr(
-  legend.title = element_text(size = 14, face = bold),
+th <- theme(
+  legend.title = element_text(size = 14, face = "bold"),
   legend.text = element_text(size = 12),
   legend.background = element_rect(fill = "lightgrey"),
   legend.key.size = unit(1.5, "cm"),
@@ -68,6 +50,7 @@ plot_box_depth <- function(df, df_name){
                  outlier.color = "grey",
                  outlier.shape=1) +
     th+
+    theme_pubr()+
     scale_fill_manual(values = c("warm"="#95D055FF", "cold"="#404788FF"))+
     labs(title=df_name,
       fill = "Warm or Cold Year")+
@@ -86,6 +69,7 @@ plot_box_temp <- function(df, df_name){
                  outlier.color = "grey",
                  outlier.shape=1) +
     th +
+    theme_pubr()+
     scale_fill_manual(values = c("warm"="#95D055FF", "cold"="#404788FF"))+
     labs(title=df_name,
          fill = "Warm or Cold Year")+
@@ -105,6 +89,7 @@ plot_box_ldepth <- function(df, df_name){
                  outlier.shape=1) +
     coord_cartesian(ylim=c(0, 225))+
     th+
+    theme_pubr()+
     scale_fill_manual(values = c("warm"="#95D055FF", "cold"="#404788FF"))+
     labs(title=df_name,
          fill = "Warm or Cold Year")+
@@ -124,6 +109,7 @@ plot_box_ltemp <- function(df, df_name){
                  outlier.shape=1) +
     coord_cartesian(ylim=c(-2.5, 12.5))+
     th+
+    theme_pubr()+
     scale_fill_manual(values = c("warm"="#95D055FF", "cold"="#404788FF"))+
     labs(title=df_name,
          fill = "Warm or Cold Year")+

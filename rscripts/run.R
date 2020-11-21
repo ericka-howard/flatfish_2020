@@ -22,7 +22,7 @@ source("./rscripts/data.R")
 # Analysis -----
 
 # create bins for each species
-akp <- coordinate_binning(akp)
+akp <- coordinate_binning(akp_long)
 fhs <- coordinate_binning(fhs)
 nrs <- coordinate_binning(nrs)
 yfs <- coordinate_binning(yfs)
