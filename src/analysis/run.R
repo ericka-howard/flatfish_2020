@@ -93,23 +93,23 @@ wc_temp_density_4square <- annotate_figure(wc_temp_density_4square,
 
 # *** Save Outputs -----
 
-ggsave(filename = "foursquare_depth_warm_cold.tiff",
+ggsave(here("results", "foursquare_depth_warm_cold.tiff"),
        plot = wc_depth_4square, width=400, height=400,
-       units = "mm", dpi=300, path = "../../results")
-ggsave(filename = "foursquare_temp_warm_cold.tiff",
+       units = "mm", dpi=300)
+ggsave(here("results", "foursquare_temp_warm_cold.tiff"),
        plot = wc_temp_4square, width=400, height=400,
-       units = "mm", dpi=300,path = "../../results/")
-ggsave(filename = "foursquare_depth_marine_heat_wave.tiff",
+       units = "mm", dpi=300)
+ggsave(here("results", "foursquare_depth_marine_heat_wave.tiff"),
        plot = mhw_depth_4square, width=400, height=400,
-       units = "mm", dpi=300,path = "../../results/")
-ggsave(filename = "foursquare_temp_marine_heat_wave.tiff",
+       units = "mm", dpi=300)
+ggsave(here("results","foursquare_temp_marine_heat_wave.tiff"),
        plot = mhw_temp_4square, width=400, height=400,
-       units = "mm", dpi=300,path = "../../results/")
+       units = "mm", dpi=300)
 
 # density plots 
-ggsave(filename = "foursquare_density_depth.tiff",
+ggsave(here("results", "foursquare_density_depth.tiff"),
        plot = wc_depth_density_4square, width=400, height=400,
-       units = "mm", dpi=300,path = "../../results/")
-ggsave(filename = "foursquare_density_temp.tiff",
+       units = "mm", dpi=300)
+ggsave(here("results", "foursquare_density_temp.tiff"),
        plot = wc_temp_density_4square, width=400, height=400,
-       units = "mm", dpi=300,path = "../../results/")
+       units = "mm", dpi=300)

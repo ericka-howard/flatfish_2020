@@ -82,7 +82,7 @@ plot_box_depth_mhw <- function(df, df_name){
     theme_pubr()+
     scale_fill_manual(values = c("Extreme Marine Heat Wave Years"=
                                    "#95D055FF", 
-                                 "Non-Extreme Marine Heat Wave Years"=
+                                 "Other Years"=
                                    "#404788FF"))+
     labs(title=df_name,
          fill = " ")+
@@ -104,7 +104,7 @@ plot_box_temp_mhw <- function(df, df_name){
     theme_pubr()+
     scale_fill_manual(values = c("Extreme Marine Heat Wave Years"=
                                    "#95D055FF", 
-                                 "Non-Extreme Marine Heat Wave Years"=
+                                 "Other Years"=
                                    "#404788FF"))+
     labs(title=df_name,
          fill = " ")+

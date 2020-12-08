@@ -110,7 +110,7 @@ len_extended <- len %>%
   mutate(warm_cold = ifelse(year %in% warm_years, "warm", "cold"),
          # add in var for which years were extreme marine heat wave
          marine_heat_wave = ifelse(year %in% c(2015, 2016, 2019), "Extreme Marine Heat Wave Years",
-                                   "Non-Extreme Marine Heat Wave Years"))
+                                   "Other Years"))
 
 # 5) Arrowtooth (phi) data ----
 
