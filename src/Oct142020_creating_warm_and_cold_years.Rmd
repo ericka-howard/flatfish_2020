@@ -1,0 +1,142 @@
+---
+title: "Using Cold and Warm Years: What's wrong with 2017?"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load-libraries, warning=FALSE, error=FALSE, message=FALSE}
+# Libraries ---------
+library(tidyverse)
+library(sf)
+library(magrittr)
+library(viridis)
+library(grDevices)
+library(ggpubr)
+library(here)
+```
+
+```{r load-source-files, warning=FALSE, error=FALSE, message=FALSE}
+# Source Scripts -------
+source("./functions.R")
+source("./data.R")
+```
+
+
+```{r create-year-temp-categories}
+overall <- haul %>%
+  filter(bottom_depth > 50 & bottom_depth <100) %>%
+  distinct(hauljoin, .keep_all = TRUE)
+
+overall_mean <- mean(overall$gear_temperature, na.rm = TRUE)
+
+year_temp_categories <- overall %>%
+  group_by(year) %>%
+  summarise(yr_temp = mean(gear_temperature, na.rm = TRUE)) %>%
+  mutate(warm_cold = ifelse(yr_temp>overall_mean, "warm", "cold"))
+```
+
+```{r look-at-2017}
+overall %>%
+  filter(year==2017|year==2016) %>%
+  mutate(warm_cold = ifelse(gear_temperature>overall_mean, "warm", "cold"))%>%
+  ggplot()+
+  geom_point(aes(x=start_longitude, y=start_latitude, color=warm_cold))+
+  scale_color_viridis(discrete=TRUE)+
+  facet_wrap(~year)+
+  theme_pubr()
+```
+
+
+```{r look-at-2017-with-all-depths}
+haul %>%
+  filter(year==2017|year==2016)%>%
+  mutate(warm_cold = ifelse(gear_temperature>overall_mean, "warm", "cold"))%>%
+  ggplot()+
+  geom_point(aes(x=start_longitude, y=start_latitude, color=warm_cold))+
+  scale_color_viridis(discrete=TRUE)+
+  facet_wrap(~year)+
+  theme_pubr()
+
+haul %>%
+  filter(year==2017|year==2016)%>%
+  mutate(warm_cold = ifelse(gear_temperature>overall_mean, "warm", "cold"))%>%
+  ggplot()+
+  geom_point(aes(x=bottom_depth, y=gear_temperature, color=warm_cold))+
+  scale_color_viridis(discrete=TRUE)+
+  facet_wrap(~year)+
+  geom_vline(xintercept=c(50,100))+
+  theme_pubr()
+```
+
+
+```{r closer-look-at-2012-2017-2018}
+catch %>%
+  filter(year==2012|year==2017 | year==2018,
+         bottom_depth > 50 & bottom_depth <100) %>%
+  ggplot()+
+  geom_boxplot(aes(x=factor(year), y=gear_temperature))+
+  theme_pubr()
+
+catch %>%
+  filter(year==2012|year==2017 | year==2018,
+         bottom_depth > 50 & bottom_depth <100) %>%
+  mutate(warm_cold = ifelse(gear_temperature>overall_mean, "warm", "cold"))%>%
+  ggplot()+
+  geom_point(aes(x=bottom_depth, y=gear_temperature, color=warm_cold))+
+  facet_wrap(~year)+
+  scale_color_viridis(discrete = TRUE)+
+  theme_pubr()
+```
+
+```{r}
+year_temp_categories_keep_other_vars <- overall %>%
+  group_by(year) %>%
+  mutate(yr_temp = mean(gear_temperature, na.rm = TRUE)) %>%
+  mutate(warm_cold = ifelse(yr_temp>overall_mean, "warm", "cold"))
+         
+         
+ggplot(data=year_temp_categories_keep_other_vars)+
+  geom_boxplot(aes(x=gear_temperature, y=factor(year), fill=warm_cold), color="darkgrey")+
+  scale_fill_viridis(discrete = TRUE)+
+  theme_pubr()+
+  geom_vline(xintercept=overall_mean, color="black", size=1)
+```
+
+```{r}
+#write_rds(year_temp_categories, path = ".././output/year_temp_categories.rds")
+```
+
+```{r}
+# # creates warm/cold boxplots
+# plot_box_wc <- function(df, df_name){
+#   ggplot(df) + 
+#     geom_boxplot(aes(x=length_bins, 
+#                      y=bottom_depth,
+#                      fill=warm_cold),
+#                  outlier.size = 1,
+#                  outlier.color = "grey",
+#                  outlier.shape=1) + 
+#     coord_cartesian(ylim=c(0, 225))+
+#     scale_fill_viridis(discrete=TRUE)+
+#     theme_pubr()+
+#     labs(title=paste(df_name, "Length", "by", "Depth", sep = " "),
+#          subtitle="Data has been grouped such that each box contains 1/8 of the data")+
+#     xlab("Length Bins (mm)")+
+#     ylab("Bottom Depth (m)")
+# }
+```
+
+
+```{r}
+# akp <- coordinate_binning(akp)
+# akp <- akp %>% 
+#   filter(!is.na(gear_temperature)) %>%
+#   mutate(warm_cold = ifelse(gear_temperature>overall_mean, "warm", "cold"))
+# plot_box_wc(akp, "Alaska Plaice")
+```
+

@@ -1,0 +1,36 @@
+---
+title: "Report"
+author: "Ericka Smith"
+date: "10/12/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Title: Differences of temperature and depth preferences in relation to fish size for various Bering Sea flatfish species.
+
+## Abstract
+
+* Used visualization techniques with RACE Eastern Bering Sea Continental Shelf Survey Data to investigate temperature and depth preferences in relation to fish size for Alaska plaice, flathead sole, northern rock sole, and yellowfin sole.
+* [findings..?]
+** AKP has more variability it seems like?
+
+## Introduction
+
+## Methods
+
+```{r}
+
+```
+
+## Results
+
+```{r}
+
+```
+
+## Discussion
+
+## References
