@@ -1,0 +1,66 @@
+---
+title: "More Phi and Length: Combining"
+author: "Ericka Smith"
+date: "12/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+load libraries 
+
+```{r}
+library(tidyverse)
+library(here)
+library(leaderCluster)
+```
+
+# try just making matrix with both groups of lats and see if you can get them matched
+
+```{r}
+len_extended <- read_rds(here("data", "intermediates/length_extended.rds"))
+phi_final <- read_rds(here("data", "intermediates/phi.rds"))
+```
+
+```{r}
+lat_list <- c(len_extended$start_latitude, phi_final$clust_lat)
+lon_list <- c(len_extended$start_longitude, phi_final$clust_lon)
+combined_mat <- matrix(c(lat_list, lon_list), ncol=2)
+combined_clusts <- leaderCluster(points=combined_mat, radius = 0.175)
+
+split_cluster_ids_LENGTH <- combined_clusts$cluster_id[1:nrow(len_extended)]
+split_cluster_ids_PHI <- combined_clusts$cluster_id[(nrow(len_extended)+1):length(combined_clusts$cluster_id)]
+
+combined_centroids <- combined_centroids <- data.frame(clust_id = seq(1, combined_clusts$num_clusters, by=1), 
+                        cluster_lat = combined_clusts$cluster_centroids[,1],
+                        cluster_lon = combined_clusts$cluster_centroids[,2])
+
+phi_updated <- phi_final %>% 
+  mutate(clust_id = as.numeric(split_cluster_ids_PHI)) %>%
+  select(phi, clust_id)
+
+len_updated <- len_extended %>%
+  mutate(clust_id = as.numeric(split_cluster_ids_LENGTH)) %>%
+  left_join(combined_centroids, by="clust_id") %>%
+  semi_join(phi_updated, by="clust_id")
+```
+
+SWEET it's matched up. Test to see if it worked alright
+
+```{r}
+summary(len_updated)
+```
+
+```{r}
+ggplot(len_updated) +
+  geom_point(aes(x=start_latitude, y=cluster_lat))+
+  geom_abline(slope=1, intercept = 0, color="red")
+
+ggplot(len_updated) +
+  geom_point(aes(x=start_longitude, y=cluster_lon))+
+  geom_abline(slope=1, intercept = 0, color="red")
+```
+
+

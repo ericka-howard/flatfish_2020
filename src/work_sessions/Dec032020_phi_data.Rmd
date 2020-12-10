@@ -1,0 +1,363 @@
+---
+title: "Phi Data"
+author: "Ericka Smith"
+date: "12/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This is the script I used to figure out how to get phi
+data added to our length data.
+It includes various QC checks
+
+load libraries
+
+```{r}
+library(tidyverse)
+library(here)
+library(leaderCluster)
+```
+
+load data
+
+```{r}
+catch <- read_csv(here("data", "Shelf_Flatfish_Haul_Catch.csv"), guess_max = 10000)
+phi <- read_csv(here("data", "Arrowtooth_Eastern_BS_has_Phi.csv"), guess_max = 10000)
+```
+
+I hate uppercase
+
+```{r}
+make_lowercase <- function(df){
+  for (i in 1:length(names(df))){
+    names(df)[i] <- tolower(names(df)[i])
+  }
+  return(df)
+}
+
+catch <- make_lowercase(catch)
+```
+
+filter catch so that it goes 2000 to 2010 and
+only includes hauls 1-300
+then create year var
+and get rid of all vars except haul, lat, long, stationid, and year
+
+```{r}
+catch_filter <- catch %>%
+  filter(cruise>=200000 & cruise <=201001,
+         region=="BS",
+         haul <=300) %>%
+  mutate(year=floor((cruise/100))) %>%
+  select(haul, start_latitude, start_longitude, stationid,year)
+```
+
+filter phi so it only includes 2000 to 2010
+get rid of unnecessary columns
+
+```{r}
+phi_filter <- phi%>%
+  filter(year>=2000 & year <=2010)%>%
+  select(haul, year, lat, lon, phi)
+
+# create an even small phi 
+phi_dat <- phi[,c("lat","lon")]
+
+# make a matrix of phi
+phi_mat <- matrix(c(phi_dat$lat,phi_dat$lon), ncol=2)
+```
+
+
+get cluster ids for spatial subsetting
+
+```{r}
+clusts <- leaderCluster(points=phi_mat, radius=.175)
+
+# add cluster ids to shorty phi data
+phi_dat <- phi_dat %>% 
+  mutate(clust_id = factor(clusts$cluster_id))
+```
+
+
+plot a small amount to see if clusters are correct
+
+```{r}
+phi_dat %>%
+  filter(lon >(-170) &lon<(-169),
+         lat >58 & lat <59) %>%
+  ggplot()+
+  geom_point(aes(x=lon, y=lat, color=clust_id))
+```
+
+plot all together to see if it worked
+
+```{r}
+compare_phi_clust <- phi_dat %>%
+  group_by(clust_id) %>%
+  summarise_at(vars(lat:lon), mean, na.rm=TRUE)
+
+ggplot()+
+  geom_point(data=phi_dat, aes(x=lon, y=lat), color="red", alpha=0.5)+
+  geom_point(data=compare_phi_clust, aes(x=lon, y=lat))
+```
+
+## it worked!
+
+now to add that back to length data...
+get phi matched up with hauljoin vars
+first check if year matters or if we can just average phi
+oops just realized I used the phi that isn't filtered to 
+only be 2000-2010
+
+```{r}
+phi_all_together <- phi %>%
+  mutate(clust_id = clusts$cluster_id)
+
+ggplot(phi_all_together)+
+  geom_point(aes(x=clust_id, y=phi, color=year))
+```
+
+...
+not sure what that tells me
+
+
+## Let's try again with the overlap years
+
+```{r}
+phi_dat <- phi_filter[,c("lat","lon")]
+
+# make a matrix of phi
+phi_mat <- matrix(c(phi_dat$lat,phi_dat$lon), ncol=2)
+
+# get cluster ids for spatial subsetting
+clusts <- leaderCluster(points=phi_mat, radius=.175)
+
+# add cluster ids to shorty phi data
+phi_dat <- phi_dat %>% 
+  mutate(clust_id = factor(clusts$cluster_id))
+```
+
+plot a small amount to see if clusters are correct
+
+```{r}
+phi_dat %>%
+  filter(lon >(-170) &lon<(-169),
+         lat >58 & lat <59) %>%
+  ggplot()+
+  geom_point(aes(x=lon, y=lat, color=clust_id))
+
+```
+
+plot all together to see if it worked
+
+```{r}
+compare_phi_clust <- phi_dat %>%
+  group_by(clust_id) %>%
+  summarise_at(vars(lat:lon), mean, na.rm=TRUE)
+
+ggplot()+
+  geom_point(data=phi_dat, aes(x=lon, y=lat), color="red", alpha=0.5)+
+  geom_point(data=compare_phi_clust, aes(x=lon, y=lat))
+```
+
+Cool, first part still looks correct, as expected.
+
+
+
+Back to trying to see if year matters for phi
+
+```{r}
+phi_all_together <- phi_filter %>%
+  mutate(clust_id = clusts$cluster_id,
+         year = factor(year))
+```
+
+
+create a range variable for ranges of phi at a cluster over the years
+
+```{r}
+phi_ranges <- phi_all_together %>%
+  group_by(clust_id) %>%
+  summarise(rang = range(phi, na.rm=TRUE)[2]-range(phi, na.rm = TRUE)[1])
+```
+
+
+make a boxplot with all phi vals and a boxplot with all phi ranges
+
+```{r}
+ggplot()+
+  geom_boxplot(data=phi_ranges, aes(x=rang), fill="orange")
+
+ggplot(phi_all_together)+
+  geom_boxplot(aes(x=phi))
+```
+
+determine which clusters have "large" ranges for phi
+
+```{r}
+large_range_clust_ids <- phi_ranges$clust_id[which(phi_ranges$rang >0.2)]
+
+phi_all_together %>%
+  filter(clust_id %in% large_range_clust_ids) %>%
+  ggplot()+
+  geom_point(aes(x=lon, y=lat))
+```
+
+looks as though "large" isn't that large (I think) AND as though there isn't a specific place that has "large" ranges (?) so I'm going to average phi values over the years
+
+## So phi from start to finish should look like this: 
+
+```{r}
+phi <- read_csv(here("data", "Arrowtooth_Eastern_BS_has_Phi.csv"), guess_max = 10000)
+phi_filter <- phi %>%
+  filter(year>=2000 & year <=2010)%>%
+  select(haul, year, lat, lon, phi)
+
+phi_mat <- matrix(c(phi_filter$lat,phi_filter$lon), ncol=2)
+
+phi_clusts <- leaderCluster(points=phi_mat, radius=.175)
+
+phi_centroids <- data.frame(clust_id = factor(seq(1, 405, by=1)), 
+                        group_lat = phi_clusts$cluster_centroids[,1],
+                        group_lon = phi_clusts$cluster_centroids[,2])
+
+phi_final <- phi_filter %>% 
+  mutate(clust_id = factor(clusts$cluster_id)) %>%
+  left_join(phi_centroids, by="clust_id")
+```
+
+## Now to attach phi to length data
+
+get length data in (just copied from `data_initial.R`) : 
+```{r echo=FALSE}
+# *** Import Data -----
+len <- read_csv(here("data", "Shelf_Flatfish_Haul_Catch_Length.csv"), guess_max = 10000)
+# Functions -------
+# makes all the column names lowercase
+make_lowercase <- function(df){
+  for (i in 1:length(names(df))){
+    names(df)[i] <- tolower(names(df)[i])
+  }
+  return(df)
+}
+# separates out species and gets rid of unnecessary cols
+separate_species <- function(spec_code){
+  dat <- len_extended %>%
+    filter(species_code==spec_code) %>%
+    select(all_of(categories_wanted)) %>%
+    make_one_row_per_fish()
+}
+# lengthens df so that each observation (each fish) has a row
+make_one_row_per_fish <- function(df){
+  new_df <- df %>%
+    uncount(round(n_haul)) %>%
+    subset(select =c(-n_haul))
+}
+
+# 3) Length data ----
+# create len_e which has lengths extrapolated to haul level by species
+len_extended <- len %>%
+  make_lowercase() %>%
+  # get only 2000-2018 and only Bering Sea
+  filter(cruise>= 199999 & cruise<201900,
+         region=="BS")%>%
+  # create year variable
+  mutate(year=floor((cruise/100))) %>%
+  # expands the sample to get the number of each species in each haul
+  # get all of one species for one haul together
+  group_by(hauljoin,species_code) %>%
+  # make 'n_specimen` which is the total for each haul for a given species
+  # that were lengthed
+  mutate(n_specimen = sum(frequency))%>%
+  # now get all species of a specific length and a specific haul
+  group_by(hauljoin,species_code, length) %>%
+  # get 'length_prop' which is the proportion of the total specimens
+  # for a given species and a given haul which are at each length
+  mutate(length_prop=(frequency/n_specimen),
+         # take that proportion and multiply it by the number of fish for
+         # the given species and length that were caught in the given haul
+         n_haul = (length_prop*catch_number_fish)) %>%
+  ungroup() %>%
+  # gets rid of missing temperature, depth, and length values
+  filter(!is.na(gear_temperature),
+         !is.na(bottom_depth),
+         !is.na(length)) %>%
+  # add in var for which years were extreme marine heat wave
+  mutate(marine_heat_wave = ifelse(year %in% c(2015, 2016, 2019), "Extreme Marine Heat Wave Years",
+                                   "Other Years"))
+
+```
+
+
+
+
+going to try just getting clusters from it. working straight from `len_extended` created by `data_initial.R`
+
+```{r}
+len_filtered <- len_extended %>%
+  select(hauljoin, start_latitude, start_longitude)
+
+len_mat <- matrix(c(len_filtered$start_latitude, 
+                    len_filtered$start_longitude), 
+                  ncol=2)
+
+len_clusts <- leaderCluster(points = len_mat, radius = 0.175)
+length_centroids <- data.frame(clust_id = factor(seq(1, 666, by=1)), 
+                        group_lat = len_clusts$cluster_centroids[,1],
+                        group_lon = len_clusts$cluster_centroids[,2])
+
+len_final <- len_filtered %>%
+  mutate(clust_id = factor(len_clusts$cluster_id)) %>%
+  left_join(length_centroids, by= "clust_id")
+```
+
+
+There are 666 clusters for length data and 405 for phi, lets see how different they look 
+
+```{r}
+ggplot()+
+  geom_point(data=len_final, aes(x=group_lon, y=group_lat), color="red", alpha=0.5)+
+  geom_point(data=phi_final, aes(x=group_lon, y=group_lat))
+```
+
+So we just don't have phi for some of the points. What if I try limiting length data to 2000-2010?
+
+```{r}
+len_2000_2010 <- len_extended %>%
+  filter(year >=2007 & year <=2008) %>%
+  select(hauljoin, start_latitude, start_longitude)
+
+len_mat_2000_2010 <- matrix(c(len_2000_2010$start_latitude, 
+                    len_2000_2010$start_longitude), 
+                  ncol=2)
+
+len_clusts_2000_2010 <- leaderCluster(points = len_mat_2000_2010, radius = 0.175)
+length_centroid_2000_2010 <- data.frame(clust_id = factor(seq(1, len_clusts_2000_2010$num_clusters, by=1)), 
+                        group_lat = len_clusts_2000_2010$cluster_centroids[,1],
+                        group_lon = len_clusts_2000_2010$cluster_centroids[,2])
+
+len_final_2000_2010 <- len_2000_2010 %>%
+  mutate(clust_id = factor(len_clusts_2000_2010$cluster_id)) %>%
+  left_join(length_centroid_2000_2010, by= "clust_id")
+```
+
+
+```{r}
+ggplot()+
+  geom_point(data=len_final_2000_2010, aes(x=group_lon, y=group_lat), color="red", size=2)+
+  geom_point(data=phi_final, aes(x=group_lon, y=group_lat), color="green", alpha=0.5)
+```
+
+Closer. Trying rerunning the above with different years based on what I see in `src/work_sessions/Jul212020_initial_EDA_II/html`
+
+2010 way too big
+2008 a little too big
+2007 too small
+2005 missing a random line
+
+## Think this is the wrong direction.
+
+I have average phi for centroid lat and lon values from arrowtooth dataset, so that's good. moving forward with that. 

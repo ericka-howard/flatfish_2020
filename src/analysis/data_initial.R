@@ -43,7 +43,7 @@ make_lowercase <- function(df){
 }
 # separates out species and gets rid of unnecessary cols
 separate_species <- function(spec_code){
-  dat <- len_extended %>%
+  dat <- len_updated %>%
     filter(species_code==spec_code) %>%
     select(all_of(categories_wanted)) %>%
     make_one_row_per_fish()
@@ -102,6 +102,7 @@ len_extended <- len %>%
          # take that proportion and multiply it by the number of fish for
          # the given species and length that were caught in the given haul
          n_haul = (length_prop*catch_number_fish)) %>%
+  ungroup() %>%
   # gets rid of missing temperature, depth, and length values
   filter(!is.na(gear_temperature),
          !is.na(bottom_depth),
@@ -113,6 +114,44 @@ len_extended <- len %>%
                                    "Other Years"))
 
 # 5) Arrowtooth (phi) data ----
+# get only overlap years
+phi_filtered <- phi %>%
+  filter(year>=2000 & year <=2010)%>%
+  select(haul, year, lat, lon, depth, phi)
+# make into matrix for leaderCluster function
+phi_mat <- matrix(c(phi_filtered$lat,phi_filtered$lon), ncol=2)
+# find clusters. radius was determined through trial and error
+# see phi_data work session
+phi_clusts <- leaderCluster(points=phi_mat, radius=.175)
+# get df with cluster id matched with cluster centroid lat/lons
+phi_centroids <- data.frame(clust_id = factor(seq(1, phi_clusts$num_clusters, by=1)), 
+                            clust_lat = phi_clusts$cluster_centroids[,1],
+                            clust_lon = phi_clusts$cluster_centroids[,2])
+# put it all together
+phi_updated <- phi_filtered %>% 
+  mutate(clust_id = factor(phi_clusts$cluster_id)) %>%
+  left_join(phi_centroids, by="clust_id")
+
+lat_list <- c(len_extended$start_latitude, phi_updated$clust_lat)
+lon_list <- c(len_extended$start_longitude, phi_updated$clust_lon)
+combined_mat <- matrix(c(lat_list, lon_list), ncol=2)
+combined_clusts <- leaderCluster(points=combined_mat, radius = 0.175)
+
+split_cluster_ids_LENGTH <- combined_clusts$cluster_id[1:nrow(len_extended)]
+split_cluster_ids_PHI <- combined_clusts$cluster_id[(nrow(len_extended)+1):length(combined_clusts$cluster_id)]
+
+combined_centroids <- combined_centroids <- data.frame(clust_id = seq(1, combined_clusts$num_clusters, by=1), 
+                                                       cluster_lat = combined_clusts$cluster_centroids[,1],
+                                                       cluster_lon = combined_clusts$cluster_centroids[,2])
+
+phi_final <- phi_updated %>% 
+  mutate(clust_id = as.numeric(split_cluster_ids_PHI)) %>%
+  select(phi, clust_id)
+
+len_updated <- len_extended %>%
+  mutate(clust_id = as.numeric(split_cluster_ids_LENGTH)) %>%
+  left_join(combined_centroids, by="clust_id") %>%
+  semi_join(phi_final, by="clust_id")
 
 
 # 6) Divide out by species ----
@@ -131,5 +170,8 @@ write_rds(akp, path = here("data", "intermediates/akp.rds"))
 write_rds(fhs, path = here("data", "intermediates/fhs.rds"))
 write_rds(nrs, path = here("data", "intermediates/nrs.rds"))
 write_rds(yfs, path = here("data", "intermediates/yfs.rds"))
+write_rds(len_extended, path = here("data", "intermediates/length_extended_orig.rds"))
+write_rds(len_updated, path = here("data", "intermediates/length_with_phi.rds"))
 write_rds(year_temp_categories, here(path = "data", "/intermediates/year_temp_categories.rds"))
 write_rds(catch, path = here("data", "intermediates/catch.rds"))
+write_rds(phi_final, path = here("data", "intermediates/phi.rds"))
