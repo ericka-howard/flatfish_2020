@@ -27,11 +27,19 @@ phi <- read_csv(here("data", "Arrowtooth_Eastern_BS_has_Phi.csv"), guess_max = 1
 
 # *** Create Var ----
 # all categories wanted for output saved length data
-categories_wanted <- c("hauljoin", "species_code", "start_latitude", "end_latitude", 
-                       "start_longitude", "end_longitude", "stationid", "bottom_depth",
-                       "gear_temperature","length", "sex", "catch_weight", "year", 
-                       "n_haul", "warm_cold", "marine_heat_wave")
-
+# categories_wanted <- c("hauljoin", "species_code", "start_latitude", "end_latitude", 
+#                        "start_longitude", "end_longitude", "stationid", "bottom_depth",
+#                        "gear_temperature","length", "sex", "catch_weight", "year", 
+#                        "n_haul", "warm_cold", "marine_heat_wave", "phi", "clust_id", 
+#                        "cluster_lat", "cluster_lon")
+# switched to be categories unwanted to generalize separate_species() func
+categories_unwanted <- c("region", "vessel", "cruise", "haul", "performance", "start_time",
+                         "duration", "distance_fished", "net_width", "net_measured",
+                         "net_height", "stratum", "gear_depth", "bottom_type",
+                         "surface_temperature","wire_length", "gear", "abundance_haul",
+                         "frequency", "catch_number_fish","n_specimen", "length_prop")
+index_categories_unwanted <- c(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 19, 21, 22, 24,
+                               25, 26, 29, 32, 34, 35)
 
 # Functions -------
 # makes all the column names lowercase
@@ -42,10 +50,11 @@ make_lowercase <- function(df){
   return(df)
 }
 # separates out species and gets rid of unnecessary cols
-separate_species <- function(spec_code){
-  dat <- len_updated %>%
-    filter(species_code==spec_code) %>%
-    select(all_of(categories_wanted)) %>%
+separate_species <- function(spec_code, start_df){
+  dat <- start_df %>%
+    filter(species_code==spec_code)
+  dat <- dat[,-index_categories_unwanted]
+  dat <- dat %>%
     make_one_row_per_fish()
 }
 # lengthens df so that each observation (each fish) has a row
@@ -62,7 +71,7 @@ catch <- catch %>%
   make_lowercase() %>%
   filter(cruise>= 199999 & cruise<201900,
          region=="BS") %>%
-  mutate(year=floor((cruise/100)))
+  mutate(year=floor((cruise/100))) 
 
 # 2) Warm and cold years ----
 # create dataframe of each individual haul from 50m to 100m 
@@ -75,7 +84,7 @@ overall_temp_mean <- mean(warm_cold_df$gear_temperature, na.rm = TRUE)
 year_temp_categories <- warm_cold_df %>%
   group_by(year) %>%
   summarise(yr_temp = mean(gear_temperature, na.rm = TRUE)) %>%
-  mutate(warm_cold = ifelse(yr_temp>overall_temp_mean, "warm", "cold"))
+  mutate(warm_cold = ifelse(yr_temp>overall_temp_mean, "warm", "cold")) 
 # now create list of warm years
 warm_years <- year_temp_categories$year[which(year_temp_categories$warm_cold == 'warm')]
 
@@ -146,32 +155,49 @@ combined_centroids <- combined_centroids <- data.frame(clust_id = seq(1, combine
 
 phi_final <- phi_updated %>% 
   mutate(clust_id = as.numeric(split_cluster_ids_PHI)) %>%
-  select(phi, clust_id)
+  select(phi, clust_id) %>%
+  write_rds(path = here("data", "intermediates/phi.rds"))
 
-len_updated <- len_extended %>%
+possible_clust_ids <- unique(phi_final$clust_id)
+
+len_updated_with_phi <- len_extended %>%
   mutate(clust_id = as.numeric(split_cluster_ids_LENGTH)) %>%
   left_join(combined_centroids, by="clust_id") %>%
-  semi_join(phi_final, by="clust_id")
+  filter(clust_id %in% possible_clust_ids) %>%
+  left_join(phi_final, by="clust_id")
 
 
 # 6) Divide out by species ----
 # Alaska plaice
-akp <- separate_species(10285)
+akp <- separate_species(10285, len_extended)
+akp_phi <- separate_species(10285, len_updated_with_phi)
 # flathead sole
-fhs <- separate_species(10130) 
+fhs <- separate_species(10130, len_extended)
+fhs_phi <- separate_species(10130, len_updated_with_phi)
 # northern rock sole
-nrs <- separate_species(10261) 
+nrs <- separate_species(10261, len_extended)
+nrs_phi <- separate_species(10261, len_updated_with_phi)
 # yellowfin sole
-yfs <- separate_species(10210)
+yfs <- separate_species(10210, len_extended)
+yfs_phi <- separate_species(10210, len_updated_with_phi)
 
-
-# Write out all files ----
-write_rds(akp, path = here("data", "intermediates/akp.rds"))
-write_rds(fhs, path = here("data", "intermediates/fhs.rds"))
-write_rds(nrs, path = here("data", "intermediates/nrs.rds"))
-write_rds(yfs, path = here("data", "intermediates/yfs.rds"))
-write_rds(len_extended, path = here("data", "intermediates/length_extended_orig.rds"))
-write_rds(len_updated, path = here("data", "intermediates/length_with_phi.rds"))
-write_rds(year_temp_categories, here(path = "data", "/intermediates/year_temp_categories.rds"))
+  
+# 7) Save output ------
 write_rds(catch, path = here("data", "intermediates/catch.rds"))
-write_rds(phi_final, path = here("data", "intermediates/phi.rds"))
+write_rds(warm_cold_df, here(path = "data", "/intermediates/year_temp_categories.rds"))
+# just length
+write_rds(len_extended, path = here("data", "intermediates/length_extended_orig.rds"))
+# just phi
+write_rds(phi_final, path = here("data", "intermediates/length_with_phi.rds"))
+# akp 
+write_rds(akp, path = here("data", "intermediates/akp.rds"))
+write_rds(akp_phi, path = here("data", "intermediates/akp_phi.rds"))
+# fhs
+write_rds(fhs, path = here("data", "intermediates/fhs.rds"))
+write_rds(fhs_phi, path = here("data", "intermediates/fhs_phi.rds"))
+# nrs
+write_rds(nrs, path = here("data", "intermediates/nrs.rds"))
+write_rds(nrs_phi, path = here("data", "intermediates/nrs_phi.rds"))
+# yfs
+write_rds(yfs, path = here("data", "intermediates/yfs.rds"))
+write_rds(yfs_phi, path = here("data", "intermediates/yfs_phi.rds"))
