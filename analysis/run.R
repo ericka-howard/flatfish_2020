@@ -16,8 +16,8 @@ library(here)
 
 # Source Scripts -------
 
-source(here("src", "analysis/functions.R"))
-source(here("src", "analysis/data.R"))
+source(here("analysis", "functions.R"))
+source(here("analysis", "data.R"))
 
 # Analysis -----
 
