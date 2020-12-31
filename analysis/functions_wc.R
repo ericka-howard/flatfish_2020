@@ -1,7 +1,7 @@
 #' title:   Eastern Bering Sea Continental Shelf Survey Flatfish Visualizations
 #' purpose: This script creates contour and box plots of Alaska plaice, flathead sole,
 #'          northern rock sole, and yellowfin sole from 2000-2018 based on the RACE EBS
-#'          survey
+#'          survey for warm vs. cold years
 #' date:    2020-12-31
 #' ---
 
@@ -15,7 +15,8 @@ make_wc_factor_levels_nice <- function(df) {
 
 # creates 8 bins for length in length_bins variable
 make_length_bins <- function(df) {
-  cutoffs <- quantile(df$length, probs = seq(0, 1, 0.125), na.rm = TRUE)
+  cutoffs <-
+    quantile(df$length, probs = seq(0, 1, 0.125), na.rm = TRUE)
   df$length_bins <-
     cut(df$length, breaks = cutoffs, include.lowest = TRUE)
   return(df)
@@ -30,9 +31,6 @@ make_boxplot <- function(df, df_name, y, y_name, ylims) {
                      y = !!yvar,
                      fill = warm_cold),
                  outlier.shape = NA) +
-    # outlier.size = 1,
-    # outlier.color = "grey",
-    # outlier.shape=1) +
     coord_cartesian(ylim = ylims) +
     theme(
       legend.title = element_blank(),
@@ -58,7 +56,7 @@ make_contour_plot <- function(df, df_name, y, y_name, ylims) {
       color = warm_cold
     ),
     size = 1) +
-    facet_wrap( ~ warm_cold) +
+    facet_wrap(~ warm_cold) +
     coord_cartesian(ylim = ylims) +
     labs(
       title = " ",
