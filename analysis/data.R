@@ -1,6 +1,7 @@
 #' title: EBS Continental Shelf Survey Flatfish Visualizations
 #' purpose: This loads all of the cleaned data into the environment.
 #' date: 2020-12-31
+#' author: Ericka B. Smith
 #' ---
 
 

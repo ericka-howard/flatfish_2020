@@ -1,8 +1,11 @@
 #' title:   Eastern Bering Sea Continental Shelf Survey Flatfish Visualizations
 #' purpose: This script creates hex and box plots of Alaska plaice, flathead sole,
 #'          northern rock sole, and yellowfin sole from 2000-2018 based on the RACE EBS
-#'          survey based on length and phi=-ln(sedimentsize). Very repetitive.
+#'          survey based on length and phi=-ln(sedimentsize) and saves them in 
+#'          results folder. See deprecated code for cleaner (but malfunctioning)
+#'          version of this script.
 #' date:    2020-12-31
+#' author: Ericka B. Smith
 #' ---
 
 

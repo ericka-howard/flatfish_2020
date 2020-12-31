@@ -3,6 +3,7 @@
 #'          northern rock sole, and yellowfin sole from 2000-2018 based on the RACE EBS 
 #'          survey
 #' date:    2020-11-24
+#' author: Ericka B. Smith
 #' ---
 
 
