@@ -2,7 +2,7 @@
 #' purpose: This script cleans the data and creates separate species files for Alaska plaice
 #'          flathead sole, northern rock sole, and yellowfin sole from 2000-2018 based on 
 #'          the RACE EBS survey
-#' date: 2020-12-7
+#' date: 2020-12-31
 #' ---
 
 
@@ -18,21 +18,8 @@ len <- read_csv(here("data", "Shelf_Flatfish_Haul_Catch_Length.csv"), guess_max 
 catch <- read_csv(here("data", "Shelf_Flatfish_Haul_Catch.csv"), guess_max = 10000)
 phi <- read_csv(here("data", "Arrowtooth_Eastern_BS_has_Phi.csv"), guess_max = 10000)
 
-# (delete later)
-# "Here is a file of Arrowtooth Flounder catch from the EBS groundfish survey with a column of 
-# sediment size (phi). I think phi is = -ln_2(sediment_size). So the larger phi indicates fine 
-# size (e.g., mud) and smaller phi indicates coarse size (e.g., sand). In general, there phi 
-# increases with depth, so the two variables (depth and phi) are correlated and often redundant."
-# -Lorenzo about phi dataset
-
 # *** Create Var ----
-# all categories wanted for output saved length data
-# categories_wanted <- c("hauljoin", "species_code", "start_latitude", "end_latitude", 
-#                        "start_longitude", "end_longitude", "stationid", "bottom_depth",
-#                        "gear_temperature","length", "sex", "catch_weight", "year", 
-#                        "n_haul", "warm_cold", "marine_heat_wave", "phi", "clust_id", 
-#                        "cluster_lat", "cluster_lon")
-# switched to be categories unwanted to generalize separate_species() func
+# categories unwanted to generalize separate_species() func
 categories_unwanted <- c("region", "vessel", "cruise", "haul", "performance", "start_time",
                          "duration", "distance_fished", "net_width", "net_measured",
                          "net_height", "stratum", "gear_depth", "bottom_type",
