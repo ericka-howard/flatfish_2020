@@ -184,7 +184,8 @@ yfs_phi <- separate_species(10210, len_updated_with_phi)
   
 # 7) Save output ------
 write_rds(catch, path = here("data", "intermediates/catch.rds"))
-write_rds(warm_cold_df, here(path = "data", "/intermediates/year_temp_categories.rds"))
+write_rds(year_temp_categories, here(path = "data", "/intermediates/year_temp_categories.rds"))
+write_rds(overall_temp_mean, here(path="data", "/intermediates/overall_temp_mean.rds"))
 # just length
 write_rds(len_extended, path = here("data", "intermediates/length_extended_orig.rds"))
 # just phi
