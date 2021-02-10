@@ -137,7 +137,7 @@ len_extended <- len %>%
     warm_cold = ifelse(year %in% warm_years, "warm", "cold"),
     # add in var for which years were extreme marine heat wave
     marine_heat_wave = ifelse(
-      year %in% c(2015, 2016, 2019),
+      year %in% c(2015, 2016),
       "Extreme Marine Heat Wave Years",
       "Other Years"
     )
