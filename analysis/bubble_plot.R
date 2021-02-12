@@ -2,6 +2,7 @@ library(PBSmapping)
 library(tidyverse)
 library(ggpubr)
 library(here)
+library(viridis)
 
 # *** Load data ----
 
@@ -26,8 +27,7 @@ bs <- nepacLLhigh %>% dplyr::select(group=PID, POS=POS,lon=X, lat=Y)
 
 akp_for_plot <- akp %>%
   make_length_bins() %>%
-  count(clust_id, cluster_lat, cluster_lon, length_bins) %>%
-  mutate(prop = )
+  count(clust_id, cluster_lat, cluster_lon, length_bins)
 
 new_akp <- akp_for_plot %>%
   group_by(length_bins) %>%
@@ -39,12 +39,12 @@ new_akp <- akp_for_plot %>%
 newest_akp <- new_akp %>%
   arrange(desc(prop))
   
-  data %>%
-  arrange(desc(pop)) %>%
-  mutate(country = factor(country, country)) %>%
-  ggplot(aes(x=gdpPercap, y=lifeExp, size = pop)) +
-  geom_point(alpha=0.5) +
-  scale_size(range = c(.1, 24), name="Population (M)")
+  # data %>%
+  # arrange(desc(pop)) %>%
+  # mutate(country = factor(country, country)) %>%
+  # ggplot(aes(x=gdpPercap, y=lifeExp, size = pop)) +
+  # geom_point(alpha=0.5) +
+  # scale_size(range = c(.1, 24), name="Population (M)")
 
 # *** Plot ----
 ggplot() + 
@@ -58,12 +58,13 @@ ggplot() +
   geom_point(data = newest_akp, 
              aes(cluster_lon,
                  cluster_lat, 
-                 size=prop, 
+                 #alpha = prop,
+                 size = prop,#size=prop,
                  color = length_bins),
              alpha=0.3)+
-    scale_size(range = c(0, 10))+
-    scale_color_viridis(discrete = TRUE)+
-    facet_wrap(~length_bins)+
+    scale_size(range = c(0, 5))+
+    scale_color_viridis(discrete = T)+
+    #facet_wrap(~length_bins)+
     theme_pubclean()
 
 

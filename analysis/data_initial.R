@@ -186,8 +186,7 @@ combined_centroids <-
 
 phi_final <- phi_updated %>%
   mutate(clust_id = as.numeric(split_cluster_ids_PHI)) %>%
-  select(phi, clust_id) %>%
-  write_rds(path = here("data", "intermediates/phi.rds"))
+  select(phi, clust_id)
 
 possible_clust_ids <- unique(phi_final$clust_id)
 
@@ -226,6 +225,9 @@ write_rds(len_extended,
           path = here("data", "intermediates/length_extended_orig.rds"))
 # just phi
 write_rds(phi_final,
+          path = here("data", "intermediates/phi.rds"))
+# len with phi
+write_rds(len_updated_with_phi,
           path = here("data", "intermediates/length_with_phi.rds"))
 # akp
 write_rds(akp, path = here("data", "intermediates/akp.rds"))
