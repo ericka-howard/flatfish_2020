@@ -8,9 +8,15 @@ library(viridis)
 # use phi because it has the entire station list set up
 phi <- read_rds(here("data/intermediates", "length_with_phi.rds"))
 
+# get spatial data from PBSmapping
 data('nepacLLhigh')
+
+# *** Data Wrangling ----
+
 bs <- nepacLLhigh %>% dplyr::select(group=PID, POS=POS,lon=X, lat=Y)
 
+# create dataframe with the means and coefficients of variations
+# based on station
 temp_means_and_cvs <- phi %>%
   mutate(gear_temp_kelvins = gear_temperature+273.15) %>%
   group_by(clust_id, cluster_lat, cluster_lon) %>%

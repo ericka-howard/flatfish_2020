@@ -5,9 +5,11 @@ library(here)
 library(viridis)
 
 # *** Load data ----
-
+# ctrl-F find and replace to switch fish
+# akp, fhs, nrs, yfs
 akp <- read_rds(here("data/intermediates", "akp_phi.rds"))
 
+# use PBSmapping to get spatial data
 data('nepacLLhigh')
 
 # *** Functions ----
@@ -27,24 +29,12 @@ bs <- nepacLLhigh %>% dplyr::select(group=PID, POS=POS,lon=X, lat=Y)
 
 akp_for_plot <- akp %>%
   make_length_bins() %>%
-  count(clust_id, cluster_lat, cluster_lon, length_bins)
-
-new_akp <- akp_for_plot %>%
+  count(clust_id, cluster_lat, cluster_lon, length_bins) %>%
   group_by(length_bins) %>%
   mutate(total_in_bin =sum(n),
          prop = n/total_in_bin) %>%
-  ungroup()
-
-# going to try removing <0.01 just to see
-newest_akp <- new_akp %>%
+  ungroup() %>%
   arrange(desc(prop))
-  
-  # data %>%
-  # arrange(desc(pop)) %>%
-  # mutate(country = factor(country, country)) %>%
-  # ggplot(aes(x=gdpPercap, y=lifeExp, size = pop)) +
-  # geom_point(alpha=0.5) +
-  # scale_size(range = c(.1, 24), name="Population (M)")
 
 # *** Plot ----
 ggplot() + 
@@ -55,16 +45,13 @@ ggplot() +
   xlab(expression(paste(Longitude^o,~'W'))) +
   ylab(expression(paste(Latitude^o,~'W')))+
   coord_map(xlim = c(-179, -158), ylim = c(54, 63)) +
-  geom_point(data = newest_akp, 
+  geom_point(data = akp_for_plot, 
              aes(cluster_lon,
                  cluster_lat, 
-                 #alpha = prop,
-                 size = prop,#size=prop,
-                 color = length_bins),
-             alpha=0.3)+
+                 alpha = prop,
+                 size = prop))+
     scale_size(range = c(0, 5))+
-    scale_color_viridis(discrete = T)+
-    #facet_wrap(~length_bins)+
+    facet_wrap(~length_bins)+
     theme_pubclean()
 
 
