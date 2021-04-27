@@ -2,17 +2,19 @@
 #' purpose: This script contains the functions used to create contour and box 
 #' plots of Alaska plaice, flathead sole, northern rock sole, and yellowfin 
 #' sole from 2000-2018 based on the RACE EBSsurvey for extreme marine heat 
-#' wave years (2015 & 2016) vs. other years.
-#' date:    2020-11-24
+#' wave years (2015 & 2016) vs. Cold years.
+#' date:    2021-04-26
 #' author: Ericka B. Smith
 #' ---
 
 # Data Management Bits ----
 # returns a dataframe with all of the wanted binning
 make_mhw_factor_levels_nice <- function(df) {
+  df <- df %>%
+    drop_na(marine_heat_wave)
   df$marine_heat_wave %<>% factor()
-  levels(df$marine_heat_wave) <-
-    c("Extreme Marine Heat Wave Years", "Other Years")
+  #levels(df$marine_heat_wave) <-
+    #c("Extreme Marine Heat Wave Years", "Cold Years")
   return(df)
 }
 # creates 8 bins for length in length_bins variable
@@ -44,7 +46,7 @@ make_boxplot <- function(df, df_name, y, y_name, ylims) {
     scale_fill_manual(values = c(
       "Extreme Marine Heat Wave Years" =
         "#95D055FF",
-      "Other Years" =
+      "Cold Years" =
         "#404788FF"
     )) +
     labs(x = " ",
@@ -72,7 +74,7 @@ make_contour_plot <- function(df, df_name, y, y_name, ylims) {
     scale_color_manual(values = c(
       "Extreme Marine Heat Wave Years" =
         "#95D055FF",
-      "Other Years" =
+      "Cold Years" =
         "#404788FF"
     )) +
     theme_pubr() +
@@ -103,7 +105,8 @@ make_foursquare_plotlist <-
                        fish_name,
                        gear_temperature,
                        "Temperature (°C)",
-                       ylims = ylimits_temp)
+                       ylims = ylimits_temp) +
+      theme(legend.position="none")
     p3 <- make_contour_plot(fish_df,
                             fish_name,
                             bottom_depth,

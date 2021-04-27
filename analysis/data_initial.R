@@ -2,7 +2,7 @@
 #' purpose: This script cleans the data and creates separate species files for Alaska plaice
 #'          flathead sole, northern rock sole, and yellowfin sole from 2000-2018 based on
 #'          the RACE EBS survey
-#' date: 2020-12-31
+#' date: 2021-04-26
 #' author: Ericka B. Smith
 #' ---
 
@@ -139,7 +139,14 @@ len_extended <- len %>%
     marine_heat_wave = ifelse(
       year %in% c(2015, 2016),
       "Extreme Marine Heat Wave Years",
-      "Other Years"
+      # "Other Years"
+      # Change so that warm years are not included in extreme marine heat
+      # wave plots later
+      ifelse(year %in% warm_years,
+             NA,
+             "Cold Years"
+             )
+      # (end of change)
     )
   )
 
