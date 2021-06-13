@@ -67,7 +67,7 @@ make_lowercase <- function(df) {
 separate_species <- function(spec_code, start_df) {
   dat <- start_df %>%
     filter(species_code == spec_code)
-  dat <- dat[, -index_categories_unwanted]
+  dat <- dat[,-index_categories_unwanted]
   dat <- dat %>%
     make_one_row_per_fish()
 }
@@ -137,15 +137,14 @@ len_extended <- len %>%
     warm_cold = ifelse(year %in% warm_years, "warm", "cold"),
     # add in var for which years were extreme marine heat wave
     marine_heat_wave = ifelse(
-      year %in% c(2015, 2016),
+      year %in% c(2016, 2018),
       "Extreme Marine Heat Wave Years",
       # "Other Years"
       # Change so that warm years are not included in extreme marine heat
       # wave plots later
       ifelse(year %in% warm_years,
              NA,
-             "Cold Years"
-             )
+             "Cold Years")
       # (end of change)
     )
   )

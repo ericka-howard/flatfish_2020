@@ -1,8 +1,8 @@
 #' title:   Eastern Bering Sea Continental Shelf Survey Flatfish Visualizations
-#' purpose: This script contains the functions used to create contour and box 
-#' plots of Alaska plaice, flathead sole, northern rock sole, and yellowfin 
+#' purpose: This script contains the functions used to create contour and box
+#' plots of Alaska plaice, flathead sole, northern rock sole, and yellowfin
 #' sole from 2000-2018 based on the RACE EBS survey for warm vs. cold years
-#' date:    2020-12-31
+#' date:    2021-04-27
 #' author: Ericka B. Smith
 #' ---
 
@@ -27,22 +27,23 @@ make_length_bins <- function(df) {
 # creates length binned boxplots
 make_boxplot <- function(df, df_name, y, y_name, ylims) {
   yvar <- enquo(y)
-  ggplot(df) +
-    geom_boxplot(aes(x = length_bins,
+  ggplot() +
+    geom_boxplot(data = df,
+                 aes(x = length_bins,
                      y = !!yvar,
                      fill = warm_cold),
                  outlier.shape = NA) +
     coord_cartesian(ylim = ylims) +
-    theme(
-      legend.title = element_blank(),
-      legend.text = element_text(size = 12),
-      legend.background = element_rect(fill = "lightgrey"),
-      legend.key.size = unit(1.5, "cm"),
-      legend.key.width = unit(0.5, "cm")
-    ) +
+
     theme_pubr() +
-    scale_fill_manual(values = c("Warm Years" = "#95D055FF", "Cold Years" =
-                                   "#404788FF")) +
+    theme(
+      legend.position = "top",
+      legend.title = element_blank(),
+      legend.text = element_text(size = 16),
+      axis.title = element_text(size = 16)
+    ) +
+    scale_fill_manual(values = c("Warm Years" = "#95D055FF", 
+                                 "Cold Years" = "#404788FF")) +
     labs(x = " ",
          y = " ",
          fill = " ")
@@ -75,7 +76,7 @@ make_contour_plot <- function(df, df_name, y, y_name, ylims) {
                                   fill = "transparent"),
       strip.background = element_blank(),
       strip.text.x = element_blank(),
-      axis.title.y = element_text(size = 16),
+      axis.title = element_text(size = 16),
       legend.title = element_blank()
     )
 }
@@ -101,13 +102,18 @@ make_foursquare_plotlist <-
                             bottom_depth,
                             "Bottom Depth (m)",
                             ylims = ylimits_depth)
-    p3r <- p3 + scale_y_reverse()
+    p3r <- p3 + 
+      scale_y_reverse() + 
+      #xlab("Length(mm)")
     p4 <- make_boxplot(fish_df,
                        fish_name,
                        bottom_depth,
                        "Bottom Depth (m)",
                        ylims = ylimits_depth)
-    p4r <- p4 + scale_y_reverse()
+    p4r <- p4 + 
+      scale_y_reverse() + 
+      #xlab("Length(mm)") +
+      theme(legend.position = "none")
     plotlist <- list(p1, p2, p3r, p4r)
     return(plotlist)
   }
