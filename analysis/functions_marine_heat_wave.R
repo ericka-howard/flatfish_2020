@@ -1,17 +1,9 @@
 #' title:   Eastern Bering Sea Continental Shelf Survey Flatfish Visualizations
-<<<<<<< HEAD
 #' purpose: This script contains the functions used to create contour and box
 #' plots of Alaska plaice, flathead sole, northern rock sole, and yellowfin
 #' sole from 2000-2018 based on the RACE EBSsurvey for extreme marine heat
 #' wave years (2016 & 2018) vs. Cold years.
 #' date:    2021-04-27
-=======
-#' purpose: This script contains the functions used to create contour and box 
-#' plots of Alaska plaice, flathead sole, northern rock sole, and yellowfin 
-#' sole from 2000-2018 based on the RACE EBSsurvey for extreme marine heat 
-#' wave years (2015 & 2016) vs. Cold years.
-#' date:    2021-04-26
->>>>>>> 9ef9b673bd7b088537404cc7c2a6693b14d0b926
 #' author: Ericka B. Smith
 #' ---
 
@@ -22,21 +14,13 @@ make_mhw_factor_levels_nice <- function(df) {
     drop_na(marine_heat_wave)
   df$marine_heat_wave %<>% factor()
   #levels(df$marine_heat_wave) <-
-<<<<<<< HEAD
   #c("Extreme Marine Heat Wave Years", "Cold Years")
-=======
-    #c("Extreme Marine Heat Wave Years", "Cold Years")
->>>>>>> 9ef9b673bd7b088537404cc7c2a6693b14d0b926
   return(df)
 }
 # creates 8 bins for length in length_bins variable
 make_length_bins <- function(df) {
-<<<<<<< HEAD
   cutoffs <-
     quantile(df$length, probs = seq(0, 1, 0.125), na.rm = TRUE)
-=======
-  cutoffs <- quantile(df$length, probs = seq(0, 1, 0.125), na.rm = TRUE)
->>>>>>> 9ef9b673bd7b088537404cc7c2a6693b14d0b926
   df$length_bins <-
     cut(df$length, breaks = cutoffs, include.lowest = TRUE)
   return(df)
@@ -52,7 +36,6 @@ make_boxplot <- function(df, df_name, y, y_name, ylims) {
                      fill = marine_heat_wave),
                  outlier.shape = NA) +
     coord_cartesian(ylim = ylims) +
-<<<<<<< HEAD
     theme_pubr() +
     theme(
       legend.position = "top",
@@ -63,16 +46,6 @@ make_boxplot <- function(df, df_name, y, y_name, ylims) {
       legend.text = element_text(size = 16),
       axis.title = element_text(size = 16)
     ) +
-=======
-    theme(
-      legend.title = element_blank(),
-      legend.text = element_text(size = 12),
-      legend.background = element_rect(fill = "lightgrey"),
-      legend.key.size = unit(1.5, "cm"),
-      legend.key.width = unit(0.5, "cm")
-    ) +
-    theme_pubr() +
->>>>>>> 9ef9b673bd7b088537404cc7c2a6693b14d0b926
     scale_fill_manual(values = c(
       "Extreme Marine Heat Wave Years" =
         "#95D055FF",
@@ -93,11 +66,7 @@ make_contour_plot <- function(df, df_name, y, y_name, ylims) {
       color = marine_heat_wave
     ),
     size = 1) +
-<<<<<<< HEAD
     facet_wrap(~ marine_heat_wave) +
-=======
-    facet_wrap( ~ marine_heat_wave) +
->>>>>>> 9ef9b673bd7b088537404cc7c2a6693b14d0b926
     coord_cartesian(ylim = ylims) +
     labs(
       title = " ",
@@ -114,21 +83,13 @@ make_contour_plot <- function(df, df_name, y, y_name, ylims) {
     theme_pubr() +
     theme(
       panel.spacing.x = unit(1, "line"),
-<<<<<<< HEAD
-=======
-      legend.position = "none",
->>>>>>> 9ef9b673bd7b088537404cc7c2a6693b14d0b926
       panel.border = element_rect(color = "black",
                                   fill = "transparent"),
       strip.background = element_blank(),
       strip.text.x = element_blank(),
-<<<<<<< HEAD
       axis.title = element_text(size = 16),
-      legend.position = "none"
-=======
-      axis.title.y = element_text(size = 16),
+      legend.position = "none",
       legend.title = element_blank()
->>>>>>> 9ef9b673bd7b088537404cc7c2a6693b14d0b926
     )
 }
 
@@ -147,33 +108,21 @@ make_foursquare_plotlist <-
                        fish_name,
                        gear_temperature,
                        "Temperature (°C)",
-<<<<<<< HEAD
-                       ylims = ylimits_temp)
-=======
                        ylims = ylimits_temp) +
       theme(legend.position="none")
->>>>>>> 9ef9b673bd7b088537404cc7c2a6693b14d0b926
     p3 <- make_contour_plot(fish_df,
                             fish_name,
                             bottom_depth,
                             "Bottom Depth (m)",
                             ylims = ylimits_depth)
-<<<<<<< HEAD
     p3r <- p3 + scale_y_reverse() + xlab("Length(mm)")
-=======
-    p3r <- p3 + scale_y_reverse()
->>>>>>> 9ef9b673bd7b088537404cc7c2a6693b14d0b926
     p4 <- make_boxplot(fish_df,
                        fish_name,
                        bottom_depth,
                        "Bottom Depth (m)",
                        ylims = ylimits_depth)
-<<<<<<< HEAD
     p4r <- p4 + scale_y_reverse() + xlab("Length(mm)") +
       theme(legend.position = "none")
-=======
-    p4r <- p4 + scale_y_reverse()
->>>>>>> 9ef9b673bd7b088537404cc7c2a6693b14d0b926
     plotlist <- list(p1, p2, p3r, p4r)
     return(plotlist)
   }
