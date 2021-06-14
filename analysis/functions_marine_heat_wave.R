@@ -108,8 +108,7 @@ make_foursquare_plotlist <-
                        fish_name,
                        gear_temperature,
                        "Temperature (°C)",
-                       ylims = ylimits_temp) +
-      theme(legend.position="none")
+                       ylims = ylimits_temp)
     p3 <- make_contour_plot(fish_df,
                             fish_name,
                             bottom_depth,

@@ -7,10 +7,10 @@
 library(readr)
 library(here)
 
-akp <- read_rds(here("data/intermediates", "akp.rds"))
+# akp <- read_rds(here("data/intermediates", "akp.rds"))
 # fhs <- read_rds(here("data/intermediates", "fhs.rds"))
 # nrs <- read_rds(here("data/intermediates", "nrs.rds"))
-# yfs <- read_rds(here("data/intermediates", "yfs.rds"))
+yfs <- read_rds(here("data/intermediates", "yfs.rds"))
 
 year_temp_categories <-
   read_rds(here("data/intermediates", "year_temp_categories.rds"))

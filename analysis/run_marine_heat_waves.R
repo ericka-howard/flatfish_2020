@@ -1,5 +1,5 @@
 #' title:   Eastern Bering Sea Continental Shelf Survey Flatfish Visualizations
-#' purpose: This script creates contour and box plots of Alaska plaice, flathead sole,
+#' purpose: This script creates contour, bubble, and box plots of Alaska plaice, flathead sole,
 #'          northern rock sole, and yellowfin sole from 2000-2018 based on the RACE EBS
 #'          survey with groupings of extreme marine heat wave vs. cold years and
 #'          saves them in results folder
