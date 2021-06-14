@@ -2,8 +2,9 @@
 #' purpose: This script creates contour and box plots of Alaska plaice, flathead sole,
 #'          northern rock sole, and yellowfin sole from 2000-2018 based on the RACE EBS
 #'          survey with groupings of extreme marine heat wave vs. cold years and
-#'          saves them in results folder
-#' date:    2021-04-26
+#'          saves them in results folder. Due to computational constraints this is done
+#'          on a fish-by-fish basis by commenting out the others. 
+#' date:    2021-06-13
 #' author: Ericka B. Smith
 #' ---
 
