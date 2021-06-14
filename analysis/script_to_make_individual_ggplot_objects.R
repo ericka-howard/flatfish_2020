@@ -57,9 +57,9 @@ paste("Start FHS: ", Sys.time())
 fhs <- read_rds(here("data/intermediates", "fhs.rds"))
 
 fhs %>%
-  make_mhw_factor_levels_nice() %>%
+  make_factor_levels_nice() %>%
   make_length_bins() %>%
-  make_foursquare_plotlist(
+  make_plots(
     "Flathead Sole",
     ylimits_depth = c(225, 25),
     ylimits_temp = c(-2, 7),
@@ -67,9 +67,9 @@ fhs %>%
   )
 
 fhs %>%
-  make_mhw_factor_levels_nice() %>%
+  make_factor_levels_nice() %>%
   make_length_bins() %>%
-  make_foursquare_plotlist(
+  make_plots(
     "Flathead Sole",
     ylimits_depth = c(225, 25),
     ylimits_temp = c(-2, 7),
@@ -83,9 +83,9 @@ paste("Start NRS: ", Sys.time())
 nrs <- read_rds(here("data/intermediates", "nrs.rds"))
 
 nrs %>%
-  make_mhw_factor_levels_nice() %>%
+  make_factor_levels_nice() %>%
   make_length_bins() %>%
-  make_foursquare_plotlist(
+  make_plots(
     "Northern Rock Sole",
     ylimits_depth = c(110, 10),
     ylimits_temp = c(-2, 9),
@@ -93,9 +93,9 @@ nrs %>%
   )
 
 nrs %>%
-  make_mhw_factor_levels_nice() %>%
+  make_factor_levels_nice() %>%
   make_length_bins() %>%
-  make_foursquare_plotlist(
+  make_plots(
     "Northern Rock Sole",
     ylimits_depth = c(110, 10),
     ylimits_temp = c(-2, 9),
@@ -108,20 +108,20 @@ rm(nrs)
 paste("Start YFS: ", Sys.time())
 yfs <- read_rds(here("data/intermediates", "yfs.rds"))
 
-yfs_plotlist <- yfs %>%
-  make_mhw_factor_levels_nice() %>%
+yfs %>%
+  make_factor_levels_nice() %>%
   make_length_bins() %>%
-  make_foursquare_plotlist(
+  make_plots(
     "Yellowfin Sole",
     ylimits_depth = c(120, 10),
     ylimits_temp = c(-2, 10),
     is_marine_heat_wave = TRUE
   )
 
-yfs_plotlist <- yfs %>%
-  make_mhw_factor_levels_nice() %>%
+yfs %>%
+  make_factor_levels_nice() %>%
   make_length_bins() %>%
-  make_foursquare_plotlist(
+  make_plots(
     "Yellowfin Sole",
     ylimits_depth = c(120, 10),
     ylimits_temp = c(-2, 10),
