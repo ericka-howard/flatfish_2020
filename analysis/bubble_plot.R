@@ -15,12 +15,12 @@ library(viridis)
 
 # *** Load data ----
 
-akp_bubble_dat <-
-  read_rds(here("data/intermediates", "akp_phi.rds"))
+# akp_bubble_dat <-
+#   read_rds(here("data/intermediates", "akp_phi.rds"))
 # fhs_bubble_dat <-
 #   read_rds(here("data/intermediates", "fhs_phi.rds"))
-# nrs_bubble_dat <-
-#   read_rds(here("data/intermediates", "nrs_phi.rds"))
+nrs_bubble_dat <-
+  read_rds(here("data/intermediates", "nrs_phi.rds"))
 # yfs_bubble_dat <-
 #   read_rds(here("data/intermediates", "yfs_phi.rds"))
 
@@ -115,8 +115,8 @@ make_bubble_plot <- function(df) {
 # fhs_bubble <- fhs_bubble_dat %>%
 #   make_bubble_plot()
 # 
-# nrs_bubble <- nrs_bubble_dat %>%
-#   make_bubble_plot()
+nrs_bubble <- nrs_bubble_dat %>%
+  make_bubble_plot()
 
 # yfs_bubble <- yfs_bubble_dat %>%
 #   make_bubble_plot()

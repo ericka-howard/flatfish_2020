@@ -103,7 +103,7 @@ make_foursquare_plotlist <-
                             "Bottom Depth (m)",
                             ylims = ylimits_depth)
     p3r <- p3 + 
-      scale_y_reverse() + 
+      scale_y_reverse()
       #xlab("Length(mm)")
     p4 <- make_boxplot(fish_df,
                        fish_name,
@@ -111,7 +111,7 @@ make_foursquare_plotlist <-
                        "Bottom Depth (m)",
                        ylims = ylimits_depth)
     p4r <- p4 + 
-      scale_y_reverse() + 
+      scale_y_reverse()+
       #xlab("Length(mm)") +
       theme(legend.position = "none")
     plotlist <- list(p1, p2, p3r, p4r)
