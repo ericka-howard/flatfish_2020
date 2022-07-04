@@ -1,6 +1,6 @@
 ## Bering Sea Flatfish
 
-**This repository includes supporting code for:  *
+**This repository includes supporting code for:  **
 *Ciannelli L, Smith E, Kearney K, Hunsicker M, McGilliard C (2022) Greater exposure of nearshore habitats in the Bering Sea makes fish early life stages vulnerable to climate change. Mar Ecol Prog Ser 684:91-102. https://doi.org/10.3354/meps13977*
 
 
